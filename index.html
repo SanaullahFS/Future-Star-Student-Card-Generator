@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Future Star Student Card Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<style>
+
+  
+:root{
+  --bg:#0C1117;--bg2:#151D27;--card:#1A2332;--card-h:#1F2B3D;
+  --border:#2A3A4E;--text:#E8E2D6;--muted:#8899AA;
+  --accent:#D4A843;--accent-h:#E5BA55;--primary:#0D7377;--primary-h:#11999E;
+  --danger:#E74C3C;--success:#27AE60;--info:#3498DB;
+  --radius:12px;--shadow:0 8px 32px rgba(0,0,0,.4);
+  --font-display:'Playfair Display',serif;--font-ui:'DM Sans',sans-serif;
+}
+.light{
+  --bg:#F5F1EB;--bg2:#EDE8E0;--card:#FFFFFF;--card-h:#F8F6F2;
+  --border:#D4CFC5;--text:#1A1A2E;--muted:#6B7280;
+  --shadow:0 8px 32px rgba(0,0,0,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background .4s,color .4s;}
+::selection{background:var(--accent);color:#000;}
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--primary);border-radius:3px;}
+a{color:var(--accent);text-decoration:none;}
+input,select,textarea{font-family:var(--font-ui);font-size:.9rem;}
+.screen{display:none;min-height:100vh;animation:fadeIn .5s ease;}
+.screen.active{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-30px);}to{opacity:1;transform:translateX(0);}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(212,168,67,.4)}70%{box-shadow:0 0 0 15px rgba(212,168,67,0)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes gradientMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes borderGlow{0%,100%{border-color:rgba(212,168,67,.3)}50%{border-color:rgba(212,168,67,.8)}}
+
+#welcome-screen{flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.welcome-bg{position:absolute;inset:0;background:linear-gradient(135deg,#0C1117 0%,#0D7377 40%,#0C1117 70%,#D4A843 100%);background-size:400% 400%;animation:gradientMove 12s ease infinite;z-index:0;}
+.welcome-bg::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 40%,rgba(13,115,119,.3),transparent 60%),radial-gradient(circle at 70% 60%,rgba(212,168,67,.2),transparent 50%);}
+.welcome-content{position:relative;z-index:1;text-align:center;padding:2rem;}
+.welcome-title{font-family:var(--font-display);font-size:clamp(2rem,6vw,4rem);font-weight:900;color:#fff;margin-bottom:.5rem;line-height:1.1;}
+.welcome-title span{color:var(--accent);display:inline-block;}
+.welcome-subtitle{font-size:clamp(1rem,2.5vw,1.3rem);color:rgba(255,255,255,.7);margin-bottom:3rem;font-weight:300;letter-spacing:1px;}
+.welcome-logo{width:80px;height:80px;margin:0 auto 1.5rem;background:rgba(212,168,67,.15);border:2px solid rgba(212,168,67,.4);border-radius:50%;display:flex;align-items:center;justify-content:center;animation:float 3s ease-in-out infinite,borderGlow 2s ease-in-out infinite;}
+.welcome-logo i{font-size:2rem;color:var(--accent);}
+.orientation-cards{display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;margin-bottom:2.5rem;}
+.orient-card{width:220px;height:300px;background:rgba(255,255,255,.08);backdrop-filter:blur(20px);border:2px solid rgba(255,255,255,.15);border-radius:20px;cursor:pointer;transition:all .4s cubic-bezier(.175,.885,.32,1.275);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;position:relative;overflow:hidden;}
+.orient-card:hover{transform:translateY(-8px) scale(1.03);border-color:var(--accent);box-shadow:0 20px 60px rgba(212,168,67,.25);}
+.orient-card.selected{border-color:var(--accent);background:rgba(212,168,67,.15);box-shadow:0 0 40px rgba(212,168,67,.3);animation:pulse 2s infinite;}
+.orient-card.selected::after{content:'\f00c';font-family:'Font Awesome 6 Free';font-weight:900;position:absolute;top:12px;right:12px;width:28px;height:28px;background:var(--accent);color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;}
+.orient-icon{font-size:3rem;color:var(--accent);}
+.orient-label{font-size:1.2rem;font-weight:600;color:#fff;}
+.orient-dims{font-size:.8rem;color:rgba(255,255,255,.5);}
+.orient-preview{width:60px;background:rgba(255,255,255,.15);border-radius:4px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.orient-preview.portrait-preview{height:90px;}
+.orient-preview.landscape-preview{height:55px;}
+.orient-preview-inner{width:80%;height:70%;background:rgba(255,255,255,.2);border-radius:2px;border:1px solid rgba(255,255,255,.3);}
+
+.btn{display:inline-flex;align-items:center;gap:.6rem;padding:.8rem 2rem;border:none;border-radius:var(--radius);font-family:var(--font-ui);font-size:1rem;font-weight:600;cursor:pointer;transition:all .3s ease;position:relative;overflow:hidden;}
+.btn::before{content:'';position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.1),transparent);opacity:0;transition:opacity .3s;}
+.btn:hover::before{opacity:1;}
+.btn-primary{background:var(--accent);color:#000;}
+.btn-primary:hover{background:var(--accent-h);transform:translateY(-2px);box-shadow:0 8px 25px rgba(212,168,67,.35);}
+.btn-secondary{background:var(--primary);color:#fff;}
+.btn-secondary:hover{background:var(--primary-h);transform:translateY(-2px);}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-danger:hover{opacity:.9;transform:translateY(-2px);}
+.btn-sm{padding:.5rem 1rem;font-size:.85rem;}
+.btn-lg{padding:1rem 2.5rem;font-size:1.1rem;}
+.btn-icon{width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:50%;}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;}
+.hidden{display:none!important;}
+
+#template-screen{flex-direction:column;align-items:center;padding:2rem;}
+.screen-header{text-align:center;margin-bottom:2rem;width:100%;}
+.screen-header h2{font-family:var(--font-display);font-size:clamp(1.5rem,4vw,2.5rem);font-weight:700;margin-bottom:.5rem;}
+.screen-header p{color:var(--muted);font-size:1rem;}
+.mode-tabs{display:flex;gap:1rem;margin-bottom:2.5rem;flex-wrap:wrap;justify-content:center;}
+.mode-tab{padding:.8rem 2rem;background:var(--card);border:2px solid var(--border);border-radius:var(--radius);cursor:pointer;font-weight:600;transition:all .3s;font-size:1rem;color:var(--text);display:flex;align-items:center;gap:.5rem;}
+.mode-tab:hover{border-color:var(--primary);}
+.mode-tab.active{border-color:var(--accent);background:rgba(212,168,67,.1);color:var(--accent);}
+.category-section{width:100%;max-width:1200px;margin-bottom:2rem;}
+.category-tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap;justify-content:center;}
+.cat-tab{padding:.5rem 1.2rem;background:var(--bg2);border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:.9rem;font-weight:500;transition:all .3s;color:var(--muted);}
+.cat-tab:hover,.cat-tab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.templates-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.5rem;}
+.template-card{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:1rem;cursor:pointer;transition:all .4s;position:relative;}
+.template-card:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:var(--primary);}
+.template-card.selected{border-color:var(--accent);box-shadow:0 0 30px rgba(212,168,67,.2);}
+.template-card.selected::after{content:'\f00c';font-family:'Font Awesome 6 Free';font-weight:900;position:absolute;top:8px;right:8px;width:24px;height:24px;background:var(--accent);color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;}
+.template-thumb{width:100%;aspect-ratio:1.586;border-radius:8px;overflow:hidden;margin-bottom:.8rem;position:relative;}
+.template-name{font-weight:600;font-size:.95rem;margin-bottom:.2rem;}
+.template-desc{font-size:.8rem;color:var(--muted);}
+
+#custom-screen{flex-direction:column;align-items:center;padding:2rem;}
+.custom-panel{width:100%;max-width:900px;background:var(--card);border-radius:16px;padding:2rem;border:1px solid var(--border);}
+.custom-section{margin-bottom:2rem;}
+.custom-section h3{font-size:1.1rem;font-weight:600;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;color:var(--accent);}
+.color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;}
+.color-item{display:flex;align-items:center;gap:.8rem;}
+.color-item label{font-size:.85rem;color:var(--muted);min-width:100px;}
+.color-item input[type="color"]{width:40px;height:32px;border:2px solid var(--border);border-radius:8px;cursor:pointer;background:transparent;padding:2px;}
+.option-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;}
+.option-item{display:flex;flex-direction:column;gap:.3rem;}
+.option-item label{font-size:.85rem;color:var(--muted);}
+.option-item select,.option-item input[type="number"],.option-item input[type="range"]{padding:.5rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.9rem;}
+.option-item input[type="range"]{padding:.3rem;cursor:pointer;}
+.option-item select:focus,.option-item input:focus{outline:none;border-color:var(--accent);}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border);}
+.toggle-row label{font-size:.9rem;}
+.toggle{width:44px;height:24px;background:var(--border);border-radius:12px;position:relative;cursor:pointer;transition:background .3s;flex-shrink:0;}
+.toggle.on{background:var(--accent);}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .3s;}
+.toggle.on::after{transform:translateX(20px);}
+
+#institution-screen{flex-direction:column;align-items:center;padding:2rem;}
+.inst-form{width:100%;max-width:700px;background:var(--card);border-radius:16px;padding:2rem;border:1px solid var(--border);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.form-group{display:flex;flex-direction:column;gap:.3rem;}
+.form-group.full{grid-column:1/-1;}
+.form-group label{font-size:.85rem;font-weight:500;color:var(--muted);}
+.form-group input,.form-group select,.form-group textarea{padding:.7rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.9rem;transition:border-color .3s;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--accent);}
+.form-group textarea{resize:vertical;min-height:60px;}
+.upload-box{border:2px dashed var(--border);border-radius:var(--radius);padding:1.5rem;text-align:center;cursor:pointer;transition:all .3s;background:var(--bg2);}
+.upload-box:hover{border-color:var(--accent);background:rgba(212,168,67,.05);}
+.upload-box i{font-size:2rem;color:var(--muted);margin-bottom:.5rem;}
+.upload-box p{font-size:.85rem;color:var(--muted);}
+.upload-box img{max-width:100px;max-height:80px;border-radius:8px;margin-top:.5rem;}
+
+#dashboard-screen{flex-direction:row;min-height:100vh;}
+.sidebar{width:240px;background:var(--bg2);border-right:1px solid var(--border);padding:1rem 0;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;transition:transform .3s;}
+.sidebar-brand{padding:1rem 1.5rem; padding-top: 1.95rem;display:flex;align-items:center ;family:var(--font-display);font-size:1.2rem;font-weight:700;color:var(--accent);border-bottom:1px solid var(--border);margin-bottom:.5rem;}
+.sidebar-nav{flex:1;overflow-y:auto;}
+.nav-item{display:flex;align-items:center;gap:.8rem;padding:.8rem 1.5rem;color:var(--muted);cursor:pointer;transition:all .3s;font-size:.9rem;border-left:3px solid transparent;}
+.nav-item:hover{color:var(--text);background:rgba(212,168,67,.05);}
+.nav-item.active{color:var(--accent);background:rgba(212,168,67,.1);border-left-color:var(--accent);}
+.nav-item i{width:20px;text-align:center;}
+.sidebar-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);}
+.main-content{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:60px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;position:sticky;top:0;z-index:50;}
+.topbar-left{display:flex;align-items:center;gap:1rem;}
+.topbar-title{font-weight:600;font-size:1rem;}
+.student-nav{display:flex;align-items:center;gap:.5rem;}
+.student-nav span{font-size:.85rem;color:var(--muted);}
+.topbar-right{display:flex;align-items:center;gap:.8rem;}
+.content-area{flex:1;padding:1.5rem;display:flex;gap:1.5rem;overflow-y:auto;}
+.form-panel{flex:1;min-width:0;}
+.preview-panel{width:420px;flex-shrink:0;position:sticky;top:75px;align-self:flex-start;}
+.tab-content{display:none;animation:slideIn .3s ease;}
+.tab-content.active{display:block;}
+.student-form{background:var(--card);border-radius:16px;padding:1.5rem;border:1px solid var(--border);}
+.form-section{margin-bottom:1.5rem;}
+.form-section h3{font-size:1rem;font-weight:600;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.5rem;color:var(--primary-h);}
+.form-actions{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:1rem;}
+
+.preview-container{background:var(--card);border-radius:16px;padding:1.5rem;border:1px solid var(--border);}
+.preview-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;}
+.preview-toolbar .btn-group{display:flex;gap:.3rem;}
+.side-toggle{display:flex;background:var(--bg2);border-radius:8px;overflow:hidden;}
+.side-toggle button{padding:.4rem 1rem;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:.85rem;font-weight:500;transition:all .3s;}
+.side-toggle button.active{background:var(--primary);color:#fff;}
+.card-preview-wrapper{display:flex;justify-content:center;align-items:center;min-height:400px;position:relative;overflow:auto;padding:1rem;perspective:1200px;}
+.card-preview-wrapper.zoomed{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:center;justify-content:center;padding:2rem;}
+
+.flip-container{position:relative;transition:transform .7s cubic-bezier(.4,.2,.2,1);transform-style:preserve-3d;}
+.flip-container.flipped{transform:rotateY(180deg);}
+.flip-face{backface-visibility:hidden;position:relative;}
+.flip-face.back-face{position:absolute;top:0;left:0;width:100%;transform:rotateY(180deg);}
+
+.id-card{position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.3);transition:transform .3s;font-family:var(--font-ui);}
+.id-card.portrait{width:320px;height:508px;border-radius:14px;}
+.id-card.landscape{width:508px;height:320px;border-radius:14px;}
+.id-card .card-bg-pattern{position:absolute;inset:0;opacity:.08;pointer-events:none;}
+.card-header{padding:10px 14px;display:flex;align-items:center;gap:10px;position:relative;}
+.card-header .inst-logo{width:36px;height:36px;border-radius:50%;object-fit:contain;background:rgba(255,255,255,.2);padding:2px;flex-shrink:0;}
+.card-header .header-text{flex:1;min-width:0;}
+.card-header .inst-name{font-weight:700;font-size:.75rem;line-height:1.2;color:#fff;text-transform:uppercase;letter-spacing:.5px;}
+.card-header .inst-sub{font-size:.55rem;color:rgba(255,255,255,.7);margin-top:1px;}
+.card-header .card-badge{font-size:.5rem;padding:2px 8px;border-radius:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.card-body{padding:10px 14px;display:flex;gap:12px;position:relative;}
+.card-body .photo-frame{width:85px;height:105px;border-radius:8px;overflow:hidden;flex-shrink:0;border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.1);}
+.card-body .photo-frame img{width:100%;height:100%;object-fit:cover;}
+.card-body .photo-frame .photo-placeholder{color:rgba(255,255,255,.3);font-size:2rem;}
+.card-body .info-grid{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.info-row{display:flex;gap:4px;font-size:.6rem;line-height:1.4;}
+.info-row .lbl{color:rgba(110, 105, 105, 0.9);font-weight:600;min-width:55px;flex-shrink:0;}
+.info-row .val{color:rgba(0, 0, 0, 0.9);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; font-weight: bold;}
+.card-footer{padding:8px 14px;display:flex;align-items:center;justify-content:space-between;position:relative;}
+.card-footer .serial{font-size:.5rem;font-weight:600;letter-spacing:.5px;}
+.card-footer .qr-container{width:45px;height:45px;background:#fff;border-radius:4px;padding:2px;display:flex;align-items:center;justify-content:center;}
+.card-footer .qr-container img,.card-footer .qr-container canvas{width:100%!important;height:100%!important;}
+.card-footer .barcode-container{flex:1;display:flex;align-items:center;justify-content:center;}
+.card-footer .barcode-container svg{max-width:140px;max-height:28px;}
+
+.card-back{display:flex;flex-direction:column;height:100%;}
+.card-back .back-header{padding:8px 14px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;text-align:center;}
+.card-back .back-body{flex:1;padding:8px 14px;display:flex;flex-direction:column;gap:6px;font-size:.58rem;}
+.card-back .back-body .back-row{display:flex;gap:4px;}
+.card-back .back-body .back-row .blbl{color:rgba(110, 105, 105, 0.9);font-weight:600;min-width:80px;}
+.card-back .back-body .back-row .bval{color:rgba(0, 0, 0, 0.9);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight: bold}
+.card-back .back-signature{padding:4px 14px;display:flex;align-items:center;gap:8px;}
+.card-back .back-signature .sig-img{max-height:30px;max-width:80px;}
+.card-back .back-signature .sig-line{flex:1;border-bottom:1px solid rgba(255,255,255,.2);margin-bottom:2px;}
+.card-back .back-signature .sig-label{font-size:.5rem;color:rgba(255,255,255,.5);}
+.card-back .back-qr{display:flex;align-items:center;justify-content:center;padding:4px;}
+.card-back .back-qr .qr-large{width:60px;height:60px;background:#fff;border-radius:4px;padding:3px;}
+.card-back .back-terms{padding:6px 14px;font-size:.45rem;color:rgba(255,255,255,.4);text-align:center;line-height:1.4;}
+.card-back .back-hologram{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);width:120px;height:30px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);background-size:200% 100%;animation:shimmer 3s linear infinite;pointer-events:none;border-radius:4px;}
+
+.glass-effect{backdrop-filter:blur(10px) saturate(1.8);-webkit-backdrop-filter:blur(10px) saturate(1.8);}
+
+.student-list-panel{background:var(--card);border-radius:16px;padding:1.5rem;border:1px solid var(--border);}
+.student-list-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;}
+.search-box{display:flex;align-items:center;gap:.5rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:.4rem .8rem;}
+.search-box input{background:transparent;border:none;color:var(--text);font-size:.9rem;width:200px;outline:none;}
+.search-box i{color:var(--muted);font-size:.85rem;}
+.student-table{width:100%;overflow-x:auto;}
+.student-table table{width:100%;border-collapse:collapse;}
+.student-table th,.student-table td{padding:.6rem .8rem;text-align:left;font-size:.85rem;border-bottom:1px solid var(--border);}
+.student-table th{color:var(--muted);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;}
+.student-table tr:hover td{background:rgba(212,168,67,.03);}
+.student-table .actions{display:flex;gap:.3rem;}
+
+.toast-container{position:fixed;top:20px;right:20px;z-index:10000;display:flex;flex-direction:column;gap:.5rem;}
+.toast{padding:.8rem 1.2rem;border-radius:10px;font-size:.9rem;font-weight:500;display:flex;align-items:center;gap:.6rem;animation:slideIn .3s ease;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:360px;}
+.toast.success{background:var(--success);color:#fff;}
+.toast.error{background:var(--danger);color:#fff;}
+.toast.info{background:var(--primary);color:#fff;}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s;}
+.modal-box{background:var(--card);border-radius:16px;padding:2rem;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;border:1px solid var(--border);animation:fadeIn .3s;}
+.modal-box h3{font-size:1.2rem;font-weight:700;margin-bottom:1rem;}
+
+.mobile-toggle{display:none;background:transparent;border:none;color:var(--text);font-size:1.3rem;cursor:pointer;}
+@media(max-width:1100px){.preview-panel{width:360px;}}
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main-content{margin-left:0;}
+  .mobile-toggle{display:block;}
+  .content-area{flex-direction:column;}
+  .preview-panel{width:100%;position:static;}
+  .form-grid{grid-template-columns:1fr;}
+}
+@media(max-width:600px){
+  .orientation-cards{flex-direction:column;align-items:center;}
+  .orient-card{width:180px;height:240px;}
+  .templates-grid{grid-template-columns:1fr;}
+  .color-grid,.option-grid{grid-template-columns:1fr;}
+  .id-card.portrait{width:280px;height:444px;}
+  .id-card.landscape{width:380px;height:240px;}
+  .content-area{padding:1rem;}
+  .topbar{padding:0 1rem;}
+  .mode-tabs{flex-direction:column;align-items:center;}
+  .mode-tab{width:90%;justify-content:center;}
+}
+@media print{.sidebar,.topbar,.form-panel,.preview-toolbar{display:none!important;}.preview-panel{width:100%!important;}.content-area{padding:0!important;}}
+
+.loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;}
+.spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+.loading-text{color:#fff;font-size:.9rem;}
+
+.ai-results{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-top:1rem;padding:1rem;background:var(--bg2);border-radius:12px;border:1px solid var(--border);}
+.ai-color-swatch{width:100%;height:50px;border-radius:8px;border:2px solid var(--border);}
+.ai-label{font-size:.8rem;color:var(--muted);margin-top:.3rem;text-align:center;}
+
+.crop-container{position:relative;display:inline-block;cursor:move;overflow:hidden;border:2px solid var(--border);border-radius:8px;background:#000;}
+.crop-container img{display:block;max-width:100%;pointer-events:none;}
+.crop-overlay{position:absolute;border:2px dashed var(--accent);background:rgba(212,168,67,.1);pointer-events:none;}
+.footer{
+    width: 100%;
+    text-align: center;
+    padding: 18px 10px;
+    margin-top: 40px;
+    background: #111827;
+    color: #f3f4f6;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.footer strong{
+    color: #60a5fa;
+    font-weight: 600;
+}
+
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+<div class="loading-overlay hidden" id="loadingOverlay"><div class="spinner"></div><div class="loading-text" id="loadingText">Generating card...</div></div>
+
+<!-- ==================== WELCOME SCREEN ==================== -->
+<div class="screen active" id="welcome-screen">
+  <div class="welcome-bg"></div>
+  <div class="welcome-content">
+    <div class="welcome-logo"><i> <span><img src="./My Logo.png" alt="Logo" style="width: 90px; padding-top: 8px;"></span></i></div>
+    <div class="welcome-title"> Future Star<br><span>Student Card Generator</span></div>
+    <div class="welcome-subtitle">Create professional ID cards for schools, colleges, universities, offices and training centers</div>
+    <div class="orientation-cards">
+      <div class="orient-card" data-orient="portrait" onclick="selectOrientation('portrait')">
+        <i class="fa-solid fa-mobile-screen orient-icon"></i>
+        <div class="orient-label">Portrait</div>
+        <div class="orient-dims">85.6 x 54 mm</div>
+        <div class="orient-preview portrait-preview"><div class="orient-preview-inner"></div></div>
+      </div>
+      <div class="orient-card" data-orient="landscape" onclick="selectOrientation('landscape')">
+        <i class="fa-solid fa-mobile-screen-button orient-icon" style="transform:rotate(90deg)"></i>
+        <div class="orient-label">Landscape</div>
+        <div class="orient-dims">54 x 85.6 mm</div>
+        <div class="orient-preview landscape-preview"><div class="orient-preview-inner"></div></div>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-lg hidden" id="welcomeContinueBtn" onclick="goToTemplateScreen()">
+      Continue <i class="fa-solid fa-arrow-right"></i>
+    </button>
+  </div>
+</div>
+
+
+
+<!-- ==================== TEMPLATE SCREEN ==================== -->
+<div class="screen" id="template-screen">
+  <div class="screen-header" style="margin-top:2rem;">
+    <h2>Choose Design Type</h2>
+    <p>Select a template style, create custom design, or use AI to copy from an existing card</p>
+  </div>
+  <div class="mode-tabs">
+    <div class="mode-tab active" data-mode="auto" onclick="selectMode('auto')"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto Template</div>
+    <div class="mode-tab" data-mode="custom" onclick="selectMode('custom')"><i class="fa-solid fa-palette"></i> Custom Design</div>
+    <div class="mode-tab" data-mode="ai" onclick="selectMode('ai')"><i class="fa-solid fa-robot"></i> AI Copy Design</div>
+  </div>
+
+  <!-- Auto Template Section -->
+  <div id="autoSection">
+    <div class="category-section">
+      <div class="category-tabs" id="categoryTabs">
+        <div class="cat-tab active" data-cat="school" onclick="selectCategory('school')"><i class="fa-solid fa-school"></i> School</div>
+        <div class="cat-tab" data-cat="college" onclick="selectCategory('college')"><i class="fa-solid fa-graduation-cap"></i> College</div>
+        <div class="cat-tab" data-cat="university" onclick="selectCategory('university')"><i class="fa-solid fa-university"></i> University</div>
+        <div class="cat-tab" data-cat="office" onclick="selectCategory('office')"><i class="fa-solid fa-briefcase"></i> Office Staff</div>
+        <div class="cat-tab" data-cat="training" onclick="selectCategory('training')"><i class="fa-solid fa-dumbbell"></i> Training Center</div>
+      </div>
+      <div class="templates-grid" id="templatesGrid"></div>
+    </div>
+  </div>
+
+  <!-- Custom Design Section -->
+  <div id="customSection" class="hidden">
+    <div class="custom-panel">
+      <div class="custom-section"><h3><i class="fa-solid fa-droplet"></i> Colors</h3>
+        <div class="color-grid">
+          <div class="color-item"><label>Header BG</label><input type="color" id="c_headerBg" value="#0D7377" onchange="updateCustomDesign()"></div>
+          <div class="color-item"><label>Body BG</label><input type="color" id="c_bodyBg" value="#1A2332" onchange="updateCustomDesign()"></div>
+          <div class="color-item"><label>Footer BG</label><input type="color" id="c_footerBg" value="#0A1628" onchange="updateCustomDesign()"></div>
+          <div class="color-item"><label>Text Color</label><input type="color" id="c_textColor" value="#FFFFFF" onchange="updateCustomDesign()"></div>
+          <div class="color-item"><label>Accent</label><input type="color" id="c_accentColor" value="#D4A843" onchange="updateCustomDesign()"></div>
+          <div class="color-item"><label>Border</label><input type="color" id="c_borderColor" value="#2A3A4E" onchange="updateCustomDesign()"></div>
+          <div class="color-item"><label>Gradient End</label><input type="color" id="c_gradientEnd" value="#11999E" onchange="updateCustomDesign()"></div>
+          <div class="color-item"><label>Shadow Color</label><input type="color" id="c_shadowColor" value="#000000" onchange="updateCustomDesign()"></div>
+        </div>
+      </div>
+      <div class="custom-section"><h3><i class="fa-solid fa-font"></i> Typography</h3>
+        <div class="option-grid">
+          <div class="option-item"><label>Font Family</label><select id="c_fontFamily" onchange="updateCustomDesign()">
+            <option value="'DM Sans',sans-serif">DM Sans</option><option value="'Playfair Display',serif">Playfair Display</option>
+            <option value="Georgia,serif">Georgia</option><option value="'Courier New',monospace">Courier New</option>
+            <option value="Verdana,sans-serif">Verdana</option><option value="'Trebuchet MS',sans-serif">Trebuchet MS</option>
+            <option value="Arial,sans-serif">Arial</option><option value="'Times New Roman',serif">Times New Roman</option>
+          </select></div>
+          <div class="option-item"><label>Font Size Scale (%)</label><input type="number" id="c_fontScale" value="100" min="80" max="130" step="5" onchange="updateCustomDesign()"></div>
+          <div class="option-item"><label>Font Weight</label><select id="c_fontWeight" onchange="updateCustomDesign()">
+            <option value="300">Light (300)</option><option value="400">Regular (400)</option><option value="500" selected>Medium (500)</option><option value="600">SemiBold (600)</option><option value="700">Bold (700)</option>
+          </select></div>
+          <div class="option-item"><label>Text Alignment</label><select id="c_textAlign" onchange="updateCustomDesign()">
+            <option value="left">Left</option><option value="center">Center</option><option value="right">Right</option>
+          </select></div>
+        </div>
+      </div>
+      <div class="custom-section"><h3><i class="fa-solid fa-sliders"></i> Card Style</h3>
+        <div class="option-grid">
+          <div class="option-item"><label>Border Radius</label><input type="number" id="c_borderRadius" value="14" min="0" max="30" onchange="updateCustomDesign()"></div>
+          <div class="option-item"><label>Shadow Intensity</label><input type="number" id="c_shadowIntensity" value="30" min="0" max="60" onchange="updateCustomDesign()"></div>
+          <div class="option-item"><label>Transparency (%)</label><input type="number" id="c_transparency" value="0" min="0" max="80" step="5" onchange="updateCustomDesign()"></div>
+          <div class="option-item"><label>Inner Spacing</label><input type="number" id="c_spacing" value="14" min="6" max="24" onchange="updateCustomDesign()"></div>
+        </div>
+      </div>
+      <div class="custom-section"><h3><i class="fa-solid fa-toggle-on"></i> Features</h3>
+        <div class="toggle-row"><label>Show QR Code</label><div class="toggle on" id="c_showQR" onclick="toggleSwitch(this);updateCustomDesign()"></div></div>
+        <div class="toggle-row"><label>Show Barcode</label><div class="toggle on" id="c_showBarcode" onclick="toggleSwitch(this);updateCustomDesign()"></div></div>
+        <div class="toggle-row"><label>Show Hologram</label><div class="toggle" id="c_showHologram" onclick="toggleSwitch(this);updateCustomDesign()"></div></div>
+        <div class="toggle-row"><label>Gradient Header</label><div class="toggle on" id="c_gradientHeader" onclick="toggleSwitch(this);updateCustomDesign()"></div></div>
+        <div class="toggle-row"><label>Glass Effect</label><div class="toggle" id="c_glassEffect" onclick="toggleSwitch(this);updateCustomDesign()"></div></div>
+      </div>
+      <div class="custom-section"><h3><i class="fa-solid fa-upload"></i> Uploads</h3>
+        <div class="option-grid">
+          <div class="option-item"><label>Watermark Image</label><div class="upload-box" onclick="triggerUpload('c_watermark')"><i class="fa-solid fa-image"></i><p>Click to upload watermark</p><img id="c_watermark_img" class="hidden"></div><input type="file" id="c_watermark" class="hidden" accept="image/*" onchange="handleCustomUpload(this,'c_watermark_img')"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  AI Copy Design Section
+  <div id="aiSection" class="hidden">
+    <div class="custom-panel">
+      <div class="custom-section"><h3><i class="fa-solid fa-robot"></i> AI Vision Simulation</h3>
+        <p style="color:var(--muted);margin-bottom:1rem;font-size:.9rem;">Upload an image of an existing ID card. The system will analyze its colors, layout, and structure to generate a matching editable template.</p>
+        <div class="upload-box" id="aiUploadBox" onclick="document.getElementById('ai_image_input').click()" style="max-width:400px;margin:0 auto;">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <p>Drop image here or click to upload</p>
+          <img id="ai_preview_img" class="hidden">
+        </div>
+        <input type="file" id="ai_image_input" class="hidden" accept="image/*" onchange="handleAIUpload(this)">
+      </div>
+      <div id="aiResultsArea" class="hidden">
+        <div class="custom-section"><h3><i class="fa-solid fa-eye"></i> Detected Colors</h3>
+          <div class="ai-results" id="aiColorResults"></div>
+        </div>
+        <div class="custom-section"><h3><i class="fa-solid fa-table-cells"></i> Detected Layout</h3>
+          <p style="color:var(--muted);font-size:.9rem;" id="aiLayoutInfo"></p>
+        </div>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="applyAIDesign()"><i class="fa-solid fa-check"></i> Apply AI Design</button>
+          <button class="btn btn-ghost" onclick="resetAI()"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap;justify-content:center;">
+    <button class="btn btn-ghost" onclick="goToScreen('welcome-screen')"><i class="fa-solid fa-arrow-left"></i> Back</button>
+    <button class="btn btn-primary btn-lg" id="templateContinueBtn" onclick="goToInstitutionScreen()">Continue <i class="fa-solid fa-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ==================== INSTITUTION SCREEN ==================== -->
+<div class="screen" id="institution-screen">
+  <div class="screen-header" style="margin-top:2rem;">
+    <h2>Institution Information</h2>
+    <p>Enter details once — they apply to all student cards</p>
+  </div>
+  <div class="inst-form">
+    <div class="form-grid">
+      <div class="form-group full"><label>Institution Name *</label><input type="text" id="inst_name" placeholder="e.g. Delhi Public School"></div>
+      <div class="form-group"><label>Institution Type</label><select id="inst_type"><option>School</option><option>College</option><option>University</option><option>Academy</option><option>Institute</option><option>Training Center</option><option>Corporate</option></select></div>
+      <div class="form-group"><label>Phone Number</label><input type="tel" id="inst_phone" placeholder="+92 3455354054"></div>
+      <div class="form-group full"><label>Address</label><textarea id="inst_address" placeholder="Full address"></textarea></div>
+      <div class="form-group"><label>Email</label><input type="email" id="inst_email" placeholder="info@institution.edu"></div>
+      <div class="form-group"><label>Website</label><input type="url" id="inst_website" placeholder="www.institution.edu"></div>
+      <div class="form-group full"><label>Principal / Director Name</label><input type="text" id="inst_principal" placeholder="Dr. Rajesh Kumar"></div>
+      <div class="form-group full"><label>Institution Logo</label>
+        <div class="upload-box" onclick="document.getElementById('inst_logo_input').click()">
+          <i class="fa-solid fa-building-columns"></i><p>Click to upload logo</p><img id="inst_logo_img" class="hidden">
+        </div>
+        <input type="file" id="inst_logo_input" class="hidden" accept="image/*" onchange="handleImageUpload(this,'inst_logo_img','institution','logo')">
+      </div>
+      <div class="form-group full"><label>Principal Signature</label>
+        <div class="upload-box" onclick="document.getElementById('inst_sig_input').click()">
+          <i class="fa-solid fa-signature"></i><p>Click to upload signature</p><img id="inst_sig_img" class="hidden">
+        </div>
+        <input type="file" id="inst_sig_input" class="hidden" accept="image/*" onchange="handleImageUpload(this,'inst_sig_img','institution','signature')">
+      </div>
+      <div class="form-group full"><label>Background Watermark (optional)</label>
+        <div class="upload-box" onclick="document.getElementById('inst_watermark_input').click()">
+          <i class="fa-solid fa-droplet"></i><p>Click to upload watermark</p><img id="inst_watermark_img" class="hidden">
+        </div>
+        <input type="file" id="inst_watermark_input" class="hidden" accept="image/*" onchange="handleImageUpload(this,'inst_watermark_img','institution','watermark')">
+      </div>
+    </div>
+    <div class="form-actions" style="margin-top:1.5rem;justify-content:center;">
+      <button class="btn btn-ghost" onclick="goToScreen('template-screen')"><i class="fa-solid fa-arrow-left"></i> Back</button>
+      <button class="btn btn-primary btn-lg" onclick="saveInstitution()">Save & Continue <i class="fa-solid fa-arrow-right"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== DASHBOARD SCREEN ==================== -->
+<div class="screen" id="dashboard-screen">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><i><img src="./My Logo.png" alt="logo" style="width: 25px;"></i> Future Star</div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" data-tab="form-tab" onclick="switchTab('form-tab',this)"><i class="fa-solid fa-user-pen"></i> Student Form</div>
+      <div class="nav-item" data-tab="preview-tab" onclick="switchTab('preview-tab',this)"><i class="fa-solid fa-id-card"></i> Card Preview</div>
+      <div class="nav-item" data-tab="students-tab" onclick="switchTab('students-tab',this)"><i class="fa-solid fa-users"></i> Students</div>
+      <div class="nav-item" data-tab="settings-tab" onclick="switchTab('settings-tab',this)"><i class="fa-solid fa-gear"></i> Settings</div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn btn-ghost btn-sm" style="width:100%" onclick="goToScreen('welcome-screen')"><i class="fa-solid fa-arrow-left"></i> Start Over</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+        <div class="student-nav">
+          <button class="btn btn-icon btn-ghost btn-sm" onclick="prevStudent()" title="Previous"><i class="fa-solid fa-chevron-left"></i></button>
+          <span id="studentCounter">Student 1 of 1</span>
+          <button class="btn btn-icon btn-ghost btn-sm" onclick="nextStudent()" title="Next"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-icon btn-ghost btn-sm" onclick="undo()" title="Undo"><i class="fa-solid fa-rotate-left"></i></button>
+        <button class="btn btn-icon btn-ghost btn-sm" onclick="redo()" title="Redo"><i class="fa-solid fa-rotate-right"></i></button>
+        <button class="btn btn-sm btn-ghost" onclick="captureScreenshot()" title="Screenshot"><i class="fa-solid fa-camera"></i></button>
+        <button class="btn btn-sm btn-ghost" onclick="toggleTheme()" id="themeBtn" title="Toggle Theme"><i class="fa-solid fa-moon"></i></button>
+        <button class="btn btn-sm btn-primary" onclick="generateCard()"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate Card</button>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="form-panel">
+        <!-- Student Form Tab -->
+        <div class="tab-content active" id="form-tab">
+          <div class="student-form">
+            <div class="form-section">
+              <h3><i class="fa-solid fa-camera"></i> Photo & Identity</h3>
+              <div class="form-grid">
+                <div class="form-group full">
+                  <label>Student Photo</label>
+                  <div class="upload-box" onclick="document.getElementById('stu_photo_input').click()" id="stu_photo_box">
+                    <i class="fa-solid fa-user"></i><p>Click to upload photo (drag & drop supported)</p><img id="stu_photo_img" class="hidden">
+                  </div>
+                  <input type="file" id="stu_photo_input" class="hidden" accept="image/*" onchange="handleImageUpload(this,'stu_photo_img','student','photo')">
+                </div>
+                <div class="form-group"><label>Full Name *</label><input type="text" id="stu_fullName" oninput="liveUpdate()"></div>
+                <div class="form-group"><label>Father Name</label><input type="text" id="stu_fatherName" oninput="liveUpdate()"></div>
+                <div class="form-group"><label>Roll Number *</label><input type="text" id="stu_rollNumber" oninput="liveUpdate()"></div>
+                <div class="form-group"><label>Registration Number</label><input type="text" id="stu_regNumber" oninput="liveUpdate()"></div>
+                <div class="form-group"><label>Student ID</label><input type="text" id="stu_studentId" oninput="liveUpdate()"></div>
+              </div>
+            </div>
+            <div class="form-section">
+              <h3><i class="fa-solid fa-graduation-cap"></i> Academic Details</h3>
+              <div class="form-grid">
+                <div class="form-group"><label>Class / Semester</label><input type="text" id="stu_class" oninput="liveUpdate()"></div>
+                <div class="form-group"><label>Section</label><input type="text" id="stu_section" oninput="liveUpdate()"></div>
+                <div class="form-group"><label>Department</label><input type="text" id="stu_department" oninput="liveUpdate()"></div>
+                <div class="form-group"><label>Blood Group</label><select id="stu_bloodGroup" onchange="liveUpdate()"><option value="">Select</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div>
+              </div>
+            </div>
+            <div class="form-section">
+              <h3><i class="fa-solid fa-circle-info"></i> Personal Details</h3>
+              <div class="form-grid">
+                <div class="form-group"><label>Date of Birth</label><input type="date" id="stu_dob" oninput="liveUpdate()"></div>
+                <div class="form-group"><label>Phone Number</label><input type="tel" id="stu_phone" oninput="liveUpdate()"></div>
+                <div class="form-group full"><label>Address</label><textarea id="stu_address" oninput="liveUpdate()" rows="2"></textarea></div>
+                <div class="form-group"><label>Emergency Contact</label><input type="tel" id="stu_emergency" oninput="liveUpdate()"></div>
+              </div>
+            </div>
+            <div class="form-section">
+              <h3><i class="fa-solid fa-calendar-check"></i> Card Validity & Extras</h3>
+              <div class="form-grid">
+                <div class="form-group"><label>Issue Date</label><input type="date" id="stu_issueDate" oninput="liveUpdate()"></div>
+                <div class="form-group"><label>Expiry Date</label><input type="date" id="stu_expiryDate" oninput="liveUpdate()"></div>
+                <div class="form-group"><label>RFID Number</label><input type="text" id="stu_rfid" oninput="liveUpdate()"></div>
+                <div class="form-group"><label>Bus Route</label><input type="text" id="stu_busRoute" oninput="liveUpdate()"></div>
+                <div class="form-group"><label>Hostel Name</label><input type="text" id="stu_hostel" oninput="liveUpdate()"></div>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" onclick="saveCurrentStudent()"><i class="fa-solid fa-floppy-disk"></i> Save Student</button>
+              <button class="btn btn-secondary" onclick="addNewStudent()"><i class="fa-solid fa-plus"></i> Add New Student</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteCurrentStudent()"><i class="fa-solid fa-trash"></i> Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview Tab -->
+        <div class="tab-content" id="preview-tab">
+          <div class="preview-container">
+            <div class="preview-toolbar">
+              <div class="side-toggle">
+                <button class="active" onclick="showCardSide('front',this)">Front</button>
+                <button onclick="showCardSide('back',this)">Back</button>
+                <button onclick="showCardSide('flip',this)">Flip</button>
+              </div>
+              <div class="btn-group">
+                <button class="btn btn-ghost btn-sm" onclick="zoomPreview(-0.1)" title="Zoom Out"><i class="fa-solid fa-minus"></i></button>
+                <button class="btn btn-ghost btn-sm" onclick="zoomPreview(0)" title="Reset"><i class="fa-solid fa-expand"></i></button>
+                <button class="btn btn-ghost btn-sm" onclick="zoomPreview(0.1)" title="Zoom In"><i class="fa-solid fa-plus"></i></button>
+                <button class="btn btn-ghost btn-sm" onclick="toggleFullscreen()" title="Fullscreen"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></button>
+              </div>
+            </div>
+            <div class="card-preview-wrapper" id="cardPreviewWrapper">
+              <div id="cardPreviewContainer"></div>
+            </div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;margin-top:1rem;">
+              <button class="btn btn-primary btn-sm" onclick="downloadCard('png')"><i class="fa-solid fa-image"></i> PNG</button>
+              <button class="btn btn-secondary btn-sm" onclick="downloadCard('jpg')"><i class="fa-solid fa-image"></i> JPG</button>
+              <button class="btn btn-ghost btn-sm" onclick="downloadCard('pdf')"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+              <button class="btn btn-ghost btn-sm" onclick="printCard()"><i class="fa-solid fa-print"></i> Print</button>
+              <button class="btn btn-ghost btn-sm" onclick="captureScreenshot()"><i class="fa-solid fa-camera"></i> Screenshot</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Students Tab -->
+        <div class="tab-content" id="students-tab">
+          <div class="student-list-panel">
+            <div class="student-list-header">
+              <h3 style="font-size:1.1rem;font-weight:700;">All Students</h3>
+              <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                <div class="search-box"><i class="fa-solid fa-search"></i><input type="text" id="searchInput" placeholder="Search students..." oninput="filterStudents()"></div>
+                <button class="btn btn-secondary btn-sm" onclick="addNewStudent()"><i class="fa-solid fa-plus"></i> Add</button>
+                <button class="btn btn-ghost btn-sm" onclick="exportStudents()"><i class="fa-solid fa-download"></i> Export JSON</button>
+                <button class="btn btn-ghost btn-sm" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('importFile').click()"><i class="fa-solid fa-upload"></i> Import</button>
+                <input type="file" id="importFile" class="hidden" accept=".json,.csv" onchange="importStudents(this)">
+              </div>
+            </div>
+            <div class="student-table" id="studentTableContainer">
+              <table><thead><tr><th>#</th><th>Name</th><th>Roll No</th><th>Class</th><th>Dept</th><th>Blood</th><th>Actions</th></tr></thead><tbody id="studentTableBody"></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div class="tab-content" id="settings-tab">
+          <div class="student-form">
+            <div class="form-section">
+              <h3><i class="fa-solid fa-palette"></i> Appearance</h3>
+              <div class="toggle-row"><label>Dark Mode</label><div class="toggle" id="settings_darkMode" onclick="toggleTheme();syncSettingsToggles()"></div></div>
+            </div>
+            <div class="form-section">
+              <h3><i class="fa-solid fa-rotate"></i> Design</h3>
+              <div class="form-actions" style="flex-direction:column;">
+                <button class="btn btn-ghost" onclick="goToScreen('template-screen')" style="width:100%;justify-content:center;"><i class="fa-solid fa-palette"></i> Change Template / Design Mode</button>
+                <button class="btn btn-ghost" onclick="goToScreen('institution-screen')" style="width:100%;justify-content:center;"><i class="fa-solid fa-building-columns"></i> Edit Institution Info</button>
+              </div>
+            </div>
+            <div class="form-section">
+              <h3><i class="fa-solid fa-database"></i> Data Management</h3>
+              <div class="form-actions" style="flex-direction:column;">
+                <button class="btn btn-ghost" onclick="exportStudents()" style="width:100%;justify-content:center;"><i class="fa-solid fa-download"></i> Export All Data (JSON)</button>
+                <button class="btn btn-ghost" onclick="exportCSV()" style="width:100%;justify-content:center;"><i class="fa-solid fa-file-csv"></i> Export All Data (CSV)</button>
+                <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()" style="width:100%;justify-content:center;"><i class="fa-solid fa-upload"></i> Import Data</button>
+                <button class="btn btn-danger" onclick="resetAllData()" style="width:100%;justify-content:center;"><i class="fa-solid fa-triangle-exclamation"></i> Reset All Data</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Side Preview Panel -->
+      <div class="preview-panel" id="sidePreview">
+        <div class="preview-container">
+          <div class="preview-toolbar">
+            <div class="side-toggle">
+              <button class="active" onclick="showCardSide('front',this)">Front</button>
+              <button onclick="showCardSide('back',this)">Back</button>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="switchTab('preview-tab',document.querySelector('[data-tab=preview-tab]'))"><i class="fa-solid fa-expand"></i></button>
+          </div>
+          <div class="card-preview-wrapper" id="sidePreviewWrapper" style="min-height:350px;">
+            <div id="sidePreviewContainer"></div>
+          </div>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;margin-top:.8rem;">
+            <button class="btn btn-primary btn-sm" onclick="generateCard()" style="width:100%;"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate & Download</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== Developer ==================== -->
+<footer class="footer">
+  <p>© 2026 Future Star Student Card Generator • Developed with ❤️ by <strong>Sana Ullah Bangash</strong></p>
+</footer>
+
+<script>
+/* ================================================================
+   APP STATE
+================================================================ */
+let appState = {
+  currentScreen:'welcome-screen',orientation:'',mode:'auto',category:'school',templateIndex:0,theme:'dark',
+  cardSide:'front',previewZoom:1,nextSerial:1,
+  institution:{name:'',type:'School',address:'',phone:'',email:'',website:'',principalName:'',logo:'',signature:'',watermark:''},
+  students:[],currentStudentIndex:0,
+  customDesign:{
+    headerBg:'#0D7377',bodyBg:'#1A2332',footerBg:'#0A1628',textColor:'#FFFFFF',
+    accentColor:'#D4A843',borderColor:'#2A3A4E',gradientEnd:'#11999E',shadowColor:'#000000',
+    fontFamily:"'DM Sans',sans-serif",fontScale:100,fontWeight:'500',textAlign:'left',
+    borderRadius:14,shadowIntensity:30,transparency:0,spacing:14,
+    showQR:true,showBarcode:true,showHologram:false,gradientHeader:true,glassEffect:false,watermark:''
+  },
+  aiDesign:{detectedColors:[],detectedLayout:'',headerBg:'',bodyBg:'',footerBg:'',accentColor:'',textColor:''},
+  undoStack:[],redoStack:[],maxUndo:30
+};
+
+/* Template definitions */
+const TEMPLATES = {
+  school:[
+    {name:'Sunrise',desc:'Warm and vibrant',headerBg:'linear-gradient(135deg,#F39C12,#E74C3C)',bodyBg:'#FFF8F0',footerBg:'#E74C3C',textColor:'#2C3E50',accentColor:'#E74C3C',gradientEnd:'#F39C12'},
+    {name:'Meadow',desc:'Fresh and natural',headerBg:'linear-gradient(135deg,#27AE60,#2ECC71)',bodyBg:'#F0FFF4',footerBg:'#27AE60',textColor:'#1A3C2D',accentColor:'#27AE60',gradientEnd:'#2ECC71'},
+    {name:'Sky Blue',desc:'Calm and clear',headerBg:'linear-gradient(135deg,#2980B9,#3498DB)',bodyBg:'#EBF5FB',footerBg:'#2980B9',textColor:'#1B2A4A',accentColor:'#2980B9',gradientEnd:'#3498DB'},
+    {name:'Cherry Blossom',desc:'Soft and gentle',headerBg:'linear-gradient(135deg,#E91E63,#F48FB1)',bodyBg:'#FFF0F5',footerBg:'#C2185B',textColor:'#4A1025',accentColor:'#E91E63',gradientEnd:'#F48FB1'}
+  ],
+  college:[
+    {name:'Academy',desc:'Modern academic',headerBg:'linear-gradient(135deg,#0D7377,#11999E)',bodyBg:'#F0F7F7',footerBg:'#0D7377',textColor:'#1A2D2E',accentColor:'#0D7377',gradientEnd:'#11999E'},
+    {name:'Scholar',desc:'Professional teal',headerBg:'linear-gradient(135deg,#1A5276,#2E86C1)',bodyBg:'#F4F6F7',footerBg:'#1A5276',textColor:'#1B2631',accentColor:'#2E86C1',gradientEnd:'#2E86C1'},
+    {name:'Crimson',desc:'Bold collegiate',headerBg:'linear-gradient(135deg,#922B21,#C0392B)',bodyBg:'#FDEDEC',footerBg:'#922B21',textColor:'#1B1A1A',accentColor:'#C0392B',gradientEnd:'#E74C3C'},
+    {name:'Indigo Night',desc:'Deep and modern',headerBg:'linear-gradient(135deg,#283593,#5C6BC0)',bodyBg:'#E8EAF6',footerBg:'#283593',textColor:'#1A1A2E',accentColor:'#5C6BC0',gradientEnd:'#7986CB'}
+  ],
+  university:[
+    {name:'Prestige',desc:'Premium gold & green',headerBg:'linear-gradient(135deg,#1A472A,#2D6A4F)',bodyBg:'#FDF8F0',footerBg:'#1A472A',textColor:'#1A1A2E',accentColor:'#D4A843',gradientEnd:'#2D6A4F'},
+    {name:'Regal',desc:'Dark and distinguished',headerBg:'linear-gradient(135deg,#1B1A2E,#2D2B55)',bodyBg:'#F5F3FF',footerBg:'#1B1A2E',textColor:'#2D2B55',accentColor:'#D4A843',gradientEnd:'#3D3B6E'},
+    {name:'Heritage',desc:'Classic maroon & gold',headerBg:'linear-gradient(135deg,#4A0E0E,#7B2D26)',bodyBg:'#FFF5F5',footerBg:'#4A0E0E',textColor:'#2C0E0E',accentColor:'#D4A843',gradientEnd:'#7B2D26'},
+    {name:'Oxford',desc:'Traditional elegance',headerBg:'linear-gradient(135deg,#002147,#1A4B7C)',bodyBg:'#F0F4F8',footerBg:'#002147',textColor:'#0A1628',accentColor:'#C19A49',gradientEnd:'#1A4B7C'}
+  ],
+  office:[
+    {name:'Corporate',desc:'Professional dark',headerBg:'linear-gradient(135deg,#1A1A2E,#16213E)',bodyBg:'#F8F9FA',footerBg:'#1A1A2E',textColor:'#1A1A2E',accentColor:'#0D7377',gradientEnd:'#16213E'},
+    {name:'Modern',desc:'Sleek and clean',headerBg:'linear-gradient(135deg,#2C3E50,#34495E)',bodyBg:'#ECF0F1',footerBg:'#2C3E50',textColor:'#2C3E50',accentColor:'#3498DB',gradientEnd:'#34495E'},
+    {name:'Executive',desc:'Premium feel',headerBg:'linear-gradient(135deg,#0C0C0C,#2C2C2C)',bodyBg:'#FAFAFA',footerBg:'#0C0C0C',textColor:'#1A1A1A',accentColor:'#D4A843',gradientEnd:'#2C2C2C'},
+    {name:'Tech Blue',desc:'Innovative vibe',headerBg:'linear-gradient(135deg,#0A192F,#112240)',bodyBg:'#E6F1FF',footerBg:'#0A192F',textColor:'#0A192F',accentColor:'#64FFDA',gradientEnd:'#112240'}
+  ],
+  training:[
+    {name:'Energy',desc:'Bold and dynamic',headerBg:'linear-gradient(135deg,#F12711,#F5AF19)',bodyBg:'#FFF5E6',footerBg:'#F12711',textColor:'#2D1B0E',accentColor:'#F12711',gradientEnd:'#F5AF19'},
+    {name:'Focus',desc:'Sharp and disciplined',headerBg:'linear-gradient(135deg,#1B1A2E,#0D7377)',bodyBg:'#F0FFFE',footerBg:'#1B1A2E',textColor:'#1A2D2E',accentColor:'#11999E',gradientEnd:'#0D7377'},
+    {name:'Power',desc:'Strong and impactful',headerBg:'linear-gradient(135deg,#D4145A,#FBB03B)',bodyBg:'#FFF8F0',footerBg:'#D4145A',textColor:'#2D0E1B',accentColor:'#D4145A',gradientEnd:'#FBB03B'},
+    {name:'Agility',desc:'Quick and modern',headerBg:'linear-gradient(135deg,#00B4DB,#0083B0)',bodyBg:'#E0F7FA',footerBg:'#006064',textColor:'#004D54',accentColor:'#00B4DB',gradientEnd:'#0083B0'}
+  ]
+};
+
+/* ================================================================
+   UTILITY FUNCTIONS
+================================================================ */
+function showToast(msg,type='info'){
+  const c=document.getElementById('toastContainer');
+  const t=document.createElement('div');
+  t.className='toast '+type;
+  const icons={success:'fa-check-circle',error:'fa-exclamation-circle',info:'fa-info-circle'};
+  t.innerHTML=`<i class="fa-solid ${icons[type]||icons.info}"></i><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100px)';t.style.transition='all .3s';setTimeout(()=>t.remove(),300);},3000);
+}
+
+function showLoading(text='Generating card...'){
+  document.getElementById('loadingText').textContent=text;
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+}
+function hideLoading(){document.getElementById('loadingOverlay').classList.add('hidden');}
+
+function generateSerial(){
+  const s='FS-'+new Date().getFullYear()+'-'+String(appState.nextSerial).padStart(4,'0');
+  appState.nextSerial++;
+  return s;
+}
+function generateValidation(){
+  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let v='';for(let i=0;i<8;i++)v+=chars[Math.floor(Math.random()*chars.length)];
+  return v;
+}
+
+function toggleSwitch(el){el.classList.toggle('on');}
+function triggerUpload(id){document.getElementById(id).click();}
+
+function handleImageUpload(input,imgId,target,field){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const img=document.getElementById(imgId);
+    img.src=e.target.result;img.classList.remove('hidden');
+    if(target==='institution'){appState.institution[field]=e.target.result;}
+    else if(target==='student'){getCurrentStudent()[field]=e.target.result;liveUpdate();}
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleCustomUpload(input,imgId){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const img=document.getElementById(imgId);img.src=e.target.result;img.classList.remove('hidden');
+    appState.customDesign.watermark=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ================================================================
+   UNDO / REDO
+================================================================ */
+function pushUndoState(){
+  const snap=JSON.stringify(appState.students);
+  appState.undoStack.push(snap);
+  if(appState.undoStack.length>appState.maxUndo)appState.undoStack.shift();
+  appState.redoStack=[];
+}
+function undo(){
+  if(appState.undoStack.length===0){showToast('Nothing to undo','info');return;}
+  appState.redoStack.push(JSON.stringify(appState.students));
+  appState.students=JSON.parse(appState.undoStack.pop());
+  if(appState.currentStudentIndex>=appState.students.length)appState.currentStudentIndex=Math.max(0,appState.students.length-1);
+  loadStudentToForm(appState.currentStudentIndex);renderStudentTable();
+  showToast('Undo successful','info');
+}
+function redo(){
+  if(appState.redoStack.length===0){showToast('Nothing to redo','info');return;}
+  appState.undoStack.push(JSON.stringify(appState.students));
+  appState.students=JSON.parse(appState.redoStack.pop());
+  if(appState.currentStudentIndex>=appState.students.length)appState.currentStudentIndex=Math.max(0,appState.students.length-1);
+  loadStudentToForm(appState.currentStudentIndex);renderStudentTable();
+  showToast('Redo successful','info');
+}
+
+/* ================================================================
+   SCREEN NAVIGATION
+================================================================ */
+function goToScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  appState.currentScreen=id;
+  if(id==='dashboard-screen'){initDashboard();renderStudentTable();}
+}
+
+function selectOrientation(o){
+  appState.orientation=o;
+  document.querySelectorAll('.orient-card').forEach(c=>{c.classList.remove('selected');if(c.dataset.orient===o)c.classList.add('selected');});
+  document.getElementById('welcomeContinueBtn').classList.remove('hidden');
+}
+
+function goToTemplateScreen(){
+  if(!appState.orientation){showToast('Please select an orientation','error');return;}
+  goToScreen('template-screen');renderTemplateGrid();
+}
+
+function selectMode(m){
+  appState.mode=m;
+  document.querySelectorAll('.mode-tab').forEach(t=>{t.classList.remove('active');if(t.dataset.mode===m)t.classList.add('active');});
+  document.getElementById('autoSection').classList.toggle('hidden',m!=='auto');
+  document.getElementById('customSection').classList.toggle('hidden',m!=='custom');
+  document.getElementById('aiSection').classList.toggle('hidden',m!=='ai');
+}
+
+function selectCategory(c){
+  appState.category=c;appState.templateIndex=0;
+  document.querySelectorAll('.cat-tab').forEach(t=>{t.classList.remove('active');if(t.dataset.cat===c)t.classList.add('active');});
+  renderTemplateGrid();
+}
+
+function selectTemplate(i){
+  appState.templateIndex=i;
+  document.querySelectorAll('.template-card').forEach((c,idx)=>{c.classList.remove('selected');if(idx===i)c.classList.add('selected');});
+}
+
+function renderTemplateGrid(){
+  const grid=document.getElementById('templatesGrid');
+  const tmpls=TEMPLATES[appState.category]||[];
+  grid.innerHTML=tmpls.map((t,i)=>`
+    <div class="template-card ${i===appState.templateIndex?'selected':''}" onclick="selectTemplate(${i})">
+      <div class="template-thumb" style="background:${t.headerBg};position:relative;">
+        <div style="position:absolute;bottom:0;left:0;right:0;height:60%;background:${t.bodyBg};"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:15%;background:${t.footerBg};"></div>
+      </div>
+      <div class="template-name">${t.name}</div>
+      <div class="template-desc">${t.desc}</div>
+    </div>`).join('');
+}
+
+function goToInstitutionScreen(){
+  goToScreen('institution-screen');
+  const inst=appState.institution;
+  if(inst.name)document.getElementById('inst_name').value=inst.name;
+  if(inst.type)document.getElementById('inst_type').value=inst.type;
+  if(inst.address)document.getElementById('inst_address').value=inst.address;
+  if(inst.phone)document.getElementById('inst_phone').value=inst.phone;
+  if(inst.email)document.getElementById('inst_email').value=inst.email;
+  if(inst.website)document.getElementById('inst_website').value=inst.website;
+  if(inst.principalName)document.getElementById('inst_principal').value=inst.principalName;
+  if(inst.logo){const img=document.getElementById('inst_logo_img');img.src=inst.logo;img.classList.remove('hidden');}
+  if(inst.signature){const img=document.getElementById('inst_sig_img');img.src=inst.signature;img.classList.remove('hidden');}
+  if(inst.watermark){const img=document.getElementById('inst_watermark_img');img.src=inst.watermark;img.classList.remove('hidden');}
+}
+
+function saveInstitution(){
+  const name=document.getElementById('inst_name').value.trim();
+  if(!name){showToast('Institution name is required','error');return;}
+  appState.institution.name=name;
+  appState.institution.type=document.getElementById('inst_type').value;
+  appState.institution.address=document.getElementById('inst_address').value;
+  appState.institution.phone=document.getElementById('inst_phone').value;
+  appState.institution.email=document.getElementById('inst_email').value;
+  appState.institution.website=document.getElementById('inst_website').value;
+  appState.institution.principalName=document.getElementById('inst_principal').value;
+  showToast('Institution info saved!','success');
+  if(appState.students.length===0){appState.students.push(createEmptyStudent());}
+  goToScreen('dashboard-screen');loadStudentToForm(0);saveToLocalStorage();
+}
+
+function updateCustomDesign(){
+  const cd=appState.customDesign;
+  cd.headerBg=document.getElementById('c_headerBg').value;
+  cd.bodyBg=document.getElementById('c_bodyBg').value;
+  cd.footerBg=document.getElementById('c_footerBg').value;
+  cd.textColor=document.getElementById('c_textColor').value;
+  cd.accentColor=document.getElementById('c_accentColor').value;
+  cd.borderColor=document.getElementById('c_borderColor').value;
+  cd.gradientEnd=document.getElementById('c_gradientEnd').value;
+  cd.shadowColor=document.getElementById('c_shadowColor').value;
+  cd.fontFamily=document.getElementById('c_fontFamily').value;
+  cd.fontScale=parseInt(document.getElementById('c_fontScale').value)||100;
+  cd.fontWeight=document.getElementById('c_fontWeight').value;
+  cd.textAlign=document.getElementById('c_textAlign').value;
+  cd.borderRadius=parseInt(document.getElementById('c_borderRadius').value)||14;
+  cd.shadowIntensity=parseInt(document.getElementById('c_shadowIntensity').value)||30;
+  cd.transparency=parseInt(document.getElementById('c_transparency').value)||0;
+  cd.spacing=parseInt(document.getElementById('c_spacing').value)||14;
+  cd.showQR=document.getElementById('c_showQR').classList.contains('on');
+  cd.showBarcode=document.getElementById('c_showBarcode').classList.contains('on');
+  cd.showHologram=document.getElementById('c_showHologram').classList.contains('on');
+  cd.gradientHeader=document.getElementById('c_gradientHeader').classList.contains('on');
+  cd.glassEffect=document.getElementById('c_glassEffect').classList.contains('on');
+}
+
+/* ================================================================
+   AI COPY DESIGN
+================================================================ */
+function handleAIUpload(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const img=document.getElementById('ai_preview_img');img.src=e.target.result;img.classList.remove('hidden');
+    analyzeAIImage(e.target.result);
+  };
+  reader.readAsDataURL(file);
+}
+
+function analyzeAIImage(dataUrl){
+  showLoading('AI analyzing image...');
+  const img=new Image();
+  img.crossOrigin='Anonymous';
+  img.onload=function(){
+    const canvas=document.createElement('canvas');
+    const ctx=canvas.getContext('2d');
+    canvas.width=img.width;canvas.height=img.height;
+    ctx.drawImage(img,0,0);
+
+    // Sample colors from different regions
+    const w=canvas.width,h=canvas.height;
+    const regions={
+      header:ctx.getImageData(0,0,w,Math.floor(h*0.2)),
+      body:ctx.getImageData(0,Math.floor(h*0.2),w,Math.floor(h*0.6)),
+      footer:ctx.getImageData(0,Math.floor(h*0.8),w,Math.floor(h*0.2)),
+      left:ctx.getImageData(0,0,Math.floor(w*0.3),h),
+      right:ctx.getImageData(Math.floor(w*0.7),0,Math.floor(w*0.3),h)
+    };
+
+    const colors={};
+    for(const[k,v]of Object.entries(regions)){
+      colors[k]=getAverageColor(v.data);
+    }
+
+    // Detect layout
+    const headerBright=getBrightness(colors.header);
+    const footerBright=getBrightness(colors.footer);
+    const bodyBright=getBrightness(colors.body);
+    let layoutType='Standard vertical layout';
+    if(appState.orientation==='landscape')layoutType='Horizontal layout with side-by-side panels';
+    else if(headerBright<80&&footerBright<80)layoutType='Dark framed layout with colored header/footer';
+    else if(bodyBright>200)layoutType='Light body with colored accents';
+
+    appState.aiDesign={
+      detectedColors:[colors.header,colors.body,colors.footer,colors.left,colors.right],
+      detectedLayout:layoutType,
+      headerBg:colors.header,bodyBg:colors.body,footerBg:colors.footer,
+      accentColor:colors.header,textColor:bodyBright>128?'#1A1A2E':'#FFFFFF'
+    };
+
+    // Display results
+    const resultsArea=document.getElementById('aiResultsArea');
+    resultsArea.classList.remove('hidden');
+
+    const colorResults=document.getElementById('aiColorResults');
+    colorResults.innerHTML=`
+      <div><div class="ai-color-swatch" style="background:${colors.header}"></div><div class="ai-label">Header Region</div></div>
+      <div><div class="ai-color-swatch" style="background:${colors.body}"></div><div class="ai-label">Body Region</div></div>
+      <div><div class="ai-color-swatch" style="background:${colors.footer}"></div><div class="ai-label">Footer Region</div></div>
+      <div><div class="ai-color-swatch" style="background:${colors.left}"></div><div class="ai-label">Left Region</div></div>
+      <div><div class="ai-color-swatch" style="background:${colors.right}"></div><div class="ai-label">Right Region</div></div>
+    `;
+
+    document.getElementById('aiLayoutInfo').textContent=layoutType;
+    hideLoading();
+    showToast('AI analysis complete!','success');
+  };
+  img.onerror=function(){hideLoading();showToast('Failed to analyze image','error');};
+  img.src=dataUrl;
+}
+
+function getAverageColor(data){
+  let r=0,g=0,b=0,count=0;
+  for(let i=0;i<data.length;i+=4){r+=data[i];g+=data[i+1];b+=data[i+2];count++;}
+  return rgbToHex(Math.floor(r/count),Math.floor(g/count),Math.floor(b/count));
+}
+
+function getBrightness(hex){
+  hex=hex.replace('#','');
+  const r=parseInt(hex.substring(0,2),16),g=parseInt(hex.substring(2,4),16),b=parseInt(hex.substring(4,6),16);
+  return(r*299+g*587+b*114)/1000;
+}
+
+function rgbToHex(r,g,b){return'#'+(r<<16|g<<8|b).toString(16).padStart(6,'0');}
+
+function applyAIDesign(){
+  const ai=appState.aiDesign;
+  if(!ai.headerBg){showToast('No AI design to apply','error');return;}
+  appState.mode='custom';
+  const cd=appState.customDesign;
+  cd.headerBg=ai.headerBg;cd.bodyBg=ai.bodyBg;cd.footerBg=ai.footerBg;
+  cd.accentColor=ai.accentColor;cd.textColor=ai.textColor;
+  cd.gradientEnd=adjustColor(ai.headerBg,30);
+  // Update custom form
+  document.getElementById('c_headerBg').value=ai.headerBg;
+  document.getElementById('c_bodyBg').value=ai.bodyBg;
+  document.getElementById('c_footerBg').value=ai.footerBg;
+  document.getElementById('c_textColor').value=ai.textColor;
+  document.getElementById('c_accentColor').value=ai.accentColor;
+  document.getElementById('c_gradientEnd').value=cd.gradientEnd;
+  showToast('AI design applied! You can further customize it.','success');
+}
+
+function resetAI(){
+  document.getElementById('aiResultsArea').classList.add('hidden');
+  document.getElementById('ai_preview_img').classList.add('hidden');
+  appState.aiDesign={detectedColors:[],detectedLayout:'',headerBg:'',bodyBg:'',footerBg:'',accentColor:'',textColor:''};
+}
+
+/* ================================================================
+   STUDENT MANAGEMENT
+================================================================ */
+function createEmptyStudent(){
+  return{
+    id:Date.now()+Math.random(),serial:generateSerial(),validation:generateValidation(),
+    photo:'',fullName:'',fatherName:'',rollNumber:'',regNumber:'',studentId:'',
+    classSemester:'',section:'',department:'',bloodGroup:'',dob:'',phone:'',
+    address:'',emergencyContact:'',issueDate:'',expiryDate:'',rfid:'',busRoute:'',hostel:''
+  };
+}
+
+function getCurrentStudent(){return appState.students[appState.currentStudentIndex]||createEmptyStudent();}
+
+function loadStudentToForm(idx){
+  if(idx<0||idx>=appState.students.length)return;
+  appState.currentStudentIndex=idx;
+  const s=appState.students[idx];
+  document.getElementById('stu_fullName').value=s.fullName||'';
+  document.getElementById('stu_fatherName').value=s.fatherName||'';
+  document.getElementById('stu_rollNumber').value=s.rollNumber||'';
+  document.getElementById('stu_regNumber').value=s.regNumber||'';
+  document.getElementById('stu_studentId').value=s.studentId||'';
+  document.getElementById('stu_class').value=s.classSemester||'';
+  document.getElementById('stu_section').value=s.section||'';
+  document.getElementById('stu_department').value=s.department||'';
+  document.getElementById('stu_bloodGroup').value=s.bloodGroup||'';
+  document.getElementById('stu_dob').value=s.dob||'';
+  document.getElementById('stu_phone').value=s.phone||'';
+  document.getElementById('stu_address').value=s.address||'';
+  document.getElementById('stu_emergency').value=s.emergencyContact||'';
+  document.getElementById('stu_issueDate').value=s.issueDate||'';
+  document.getElementById('stu_expiryDate').value=s.expiryDate||'';
+  document.getElementById('stu_rfid').value=s.rfid||'';
+  document.getElementById('stu_busRoute').value=s.busRoute||'';
+  document.getElementById('stu_hostel').value=s.hostel||'';
+  const pImg=document.getElementById('stu_photo_img');
+  if(s.photo){pImg.src=s.photo;pImg.classList.remove('hidden');}
+  else{pImg.classList.add('hidden');pImg.src='';}
+  updateStudentCounter();liveUpdate();
+}
+
+function saveCurrentStudent(){
+  const s=appState.students[appState.currentStudentIndex];if(!s)return;
+  pushUndoState();
+  s.fullName=document.getElementById('stu_fullName').value.trim();
+  s.fatherName=document.getElementById('stu_fatherName').value.trim();
+  s.rollNumber=document.getElementById('stu_rollNumber').value.trim();
+  s.regNumber=document.getElementById('stu_regNumber').value.trim();
+  s.studentId=document.getElementById('stu_studentId').value.trim();
+  s.classSemester=document.getElementById('stu_class').value.trim();
+  s.section=document.getElementById('stu_section').value.trim();
+  s.department=document.getElementById('stu_department').value.trim();
+  s.bloodGroup=document.getElementById('stu_bloodGroup').value;
+  s.dob=document.getElementById('stu_dob').value;
+  s.phone=document.getElementById('stu_phone').value.trim();
+  s.address=document.getElementById('stu_address').value.trim();
+  s.emergencyContact=document.getElementById('stu_emergency').value.trim();
+  s.issueDate=document.getElementById('stu_issueDate').value;
+  s.expiryDate=document.getElementById('stu_expiryDate').value;
+  s.rfid=document.getElementById('stu_rfid').value.trim();
+  s.busRoute=document.getElementById('stu_busRoute').value.trim();
+  s.hostel=document.getElementById('stu_hostel').value.trim();
+  saveToLocalStorage();renderStudentTable();showToast('Student saved!','success');
+}
+
+function addNewStudent(){
+  saveCurrentStudent();pushUndoState();
+  const s=createEmptyStudent();appState.students.push(s);
+  loadStudentToForm(appState.students.length-1);renderStudentTable();showToast('New student added','info');
+}
+
+function deleteCurrentStudent(){
+  if(appState.students.length<=1){showToast('Cannot delete the only student','error');return;}
+  pushUndoState();
+  appState.students.splice(appState.currentStudentIndex,1);
+  if(appState.currentStudentIndex>=appState.students.length)appState.currentStudentIndex=appState.students.length-1;
+  loadStudentToForm(appState.currentStudentIndex);renderStudentTable();saveToLocalStorage();showToast('Student deleted','info');
+}
+
+function deleteStudentByIdx(idx){
+  if(appState.students.length<=1){showToast('Cannot delete the only student','error');return;}
+  pushUndoState();
+  appState.students.splice(idx,1);
+  if(appState.currentStudentIndex>=appState.students.length)appState.currentStudentIndex=appState.students.length-1;
+  loadStudentToForm(appState.currentStudentIndex);renderStudentTable();saveToLocalStorage();showToast('Student deleted','info');
+}
+
+function prevStudent(){if(appState.currentStudentIndex>0){saveCurrentStudent();loadStudentToForm(appState.currentStudentIndex-1);}}
+function nextStudent(){if(appState.currentStudentIndex<appState.students.length-1){saveCurrentStudent();loadStudentToForm(appState.currentStudentIndex+1);}}
+
+function updateStudentCounter(){
+  document.getElementById('studentCounter').textContent=`Student ${appState.currentStudentIndex+1} of ${appState.students.length}`;
+}
+
+function renderStudentTable(){
+  const tbody=document.getElementById('studentTableBody');
+  const search=(document.getElementById('searchInput')?.value||'').toLowerCase();
+  const filtered=appState.students.filter(s=>!search||s.fullName.toLowerCase().includes(search)||s.rollNumber.toLowerCase().includes(search)||s.department.toLowerCase().includes(search));
+  tbody.innerHTML=filtered.map((s,i)=>{
+    const realIdx=appState.students.indexOf(s);
+    return`<tr>
+      <td>${realIdx+1}</td><td>${s.fullName||'—'}</td><td>${s.rollNumber||'—'}</td>
+      <td>${s.classSemester||'—'}</td><td>${s.department||'—'}</td><td>${s.bloodGroup||'—'}</td>
+      <td class="actions">
+        <button class="btn btn-ghost btn-sm" onclick="loadStudentToForm(${realIdx});switchTab('form-tab',document.querySelector('[data-tab=form-tab]'))"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn btn-danger btn-sm" onclick="deleteStudentByIdx(${realIdx})"><i class="fa-solid fa-trash"></i></button>
+      </td></tr>`;
+  }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">No students found</td></tr>';
+}
+
+function filterStudents(){renderStudentTable();}
+
+/* ================================================================
+   CARD RENDERING
+================================================================ */
+function getDesignProps(){
+  if(appState.mode==='ai'&&appState.aiDesign.headerBg){
+    const ai=appState.aiDesign;
+    return{
+      headerBg:ai.headerBg,bodyBg:ai.bodyBg,footerBg:ai.footerBg,textColor:ai.textColor,
+      accentColor:ai.accentColor,borderColor:ai.accentColor+'44',gradientEnd:adjustColor(ai.headerBg,30),shadowColor:'#000000',
+      fontFamily:"'DM Sans',sans-serif",fontScale:100,fontWeight:'500',textAlign:'left',
+      borderRadius:14,shadowIntensity:30,transparency:0,spacing:14,
+      showQR:true,showBarcode:true,showHologram:false,gradientHeader:true,glassEffect:false,watermark:''
+    };
+  }
+  if(appState.mode==='auto'){
+    const tmpl=TEMPLATES[appState.category]?.[appState.templateIndex];
+    if(tmpl)return{
+      headerBg:tmpl.headerBg,bodyBg:tmpl.bodyBg,footerBg:tmpl.footerBg,textColor:tmpl.textColor,
+      accentColor:tmpl.accentColor,borderColor:tmpl.accentColor+'44',gradientEnd:tmpl.gradientEnd||tmpl.accentColor,shadowColor:'#000000',
+      fontFamily:"'DM Sans',sans-serif",fontScale:100,fontWeight:'500',textAlign:'left',
+      borderRadius:14,shadowIntensity:30,transparency:0,spacing:14,
+      showQR:true,showBarcode:true,showHologram:appState.category==='university',
+      gradientHeader:true,glassEffect:false,watermark:''
+    };
+  }
+  return appState.customDesign;
+}
+
+function liveUpdate(){
+  const s=getCurrentStudent();
+  const fields=['fullName','fatherName','rollNumber','regNumber','studentId','classSemester','section','department','bloodGroup','dob','phone','address','emergencyContact','issueDate','expiryDate','rfid','busRoute','hostel'];
+  const ids=['stu_fullName','stu_fatherName','stu_rollNumber','stu_regNumber','stu_studentId','stu_class','stu_section','stu_department','stu_bloodGroup','stu_dob','stu_phone','stu_address','stu_emergency','stu_issueDate','stu_expiryDate','stu_rfid','stu_busRoute','stu_hostel'];
+  ids.forEach((id,i)=>{const el=document.getElementById(id);if(el)s[fields[i]]=el.value||s[fields[i]]||'';});
+  renderCardToContainers();
+}
+
+function renderCardToContainers(){
+  const html=appState.cardSide==='back'?renderBackCard():renderFrontCard();
+  ['cardPreviewContainer','sidePreviewContainer'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.innerHTML=html;afterCardRender(el);}
+  });
+}
+
+function afterCardRender(container){
+  container.querySelectorAll('.qr-gen').forEach(qrEl=>{
+    const s=getCurrentStudent();
+    const qrData=JSON.stringify({name:s.fullName,roll:s.rollNumber,id:s.studentId,serial:s.serial,validation:s.validation});
+    try{new QRCode(qrEl,{text:qrData,width:45,height:45,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.L});}catch(e){}
+  });
+  container.querySelectorAll('.qr-gen-lg').forEach(qrLg=>{
+    const s=getCurrentStudent();
+    const qrData=JSON.stringify({name:s.fullName,roll:s.rollNumber,id:s.studentId,serial:s.serial,validation:s.validation});
+    try{new QRCode(qrLg,{text:qrData,width:60,height:60,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M});}catch(e){}
+  });
+  container.querySelectorAll('.barcode-gen').forEach(bcEl=>{
+    const s=getCurrentStudent();
+    const val=s.rollNumber||s.studentId||s.serial||'000000';
+    try{JsBarcode(bcEl,val,{format:'CODE128',width:1.2,height:28,displayValue:false,margin:0,background:'transparent',lineColor:getDesignProps().textColor||'#fff'});}catch(e){}
+  });
+}
+
+function renderFrontCard(){
+  const d=getDesignProps();const s=getCurrentStudent();const inst=appState.institution;
+  const fs=d.fontScale/100;const sp=d.spacing;
+  const cat=appState.category;
+  const badgeText=cat==='office'?'STAFF':cat==='training'?'TRAINEE':cat==='college'?'SCHOLAR':cat==='university'?'MEMBER':'STUDENT';
+  const catIcon=cat==='office'?'fa-briefcase':cat==='training'?'fa-dumbbell':cat==='school'?'fa-school':cat==='college'?'fa-graduation-cap':'fa-university';
+
+  const headerBg=d.gradientHeader&&d.headerBg&&!d.headerBg.includes('gradient')
+    ?`linear-gradient(135deg,${d.headerBg},${d.gradientEnd||adjustColor(d.headerBg,30)})`
+    :d.headerBg;
+
+  const glassClass=d.glassEffect?'glass-effect':'';
+  const bodyOpacity=1-(d.transparency/100);
+  const watermarkSrc=d.watermark||inst.watermark||'';
+
+  const isDarkText=isColorDark(d.textColor);
+
+  return`<div class="id-card ${appState.orientation} ${glassClass}" style="border-radius:${d.borderRadius}px;box-shadow:0 ${d.shadowIntensity/3}px ${d.shadowIntensity}px ${d.shadowColor}66;font-family:${d.fontFamily};font-size:${fs}rem;background:${d.bodyBg};opacity:${bodyOpacity};font-weight:${d.fontWeight};">
+    <div class="card-header" style="background:${headerBg};padding:${sp}px ${sp+2}px;">
+      ${inst.logo?`<img class="inst-logo" src="${inst.logo}" alt="Logo">`:`<div class="inst-logo" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:rgba(255,255,255,.5);"><i class="fa-solid ${catIcon}"></i></div>`}
+      <div class="header-text">
+        <div class="inst-name" style="font-size:${.75*fs}rem;">${inst.name||'Institution Name'}</div>
+        <div class="inst-sub" style="font-size:${.55*fs}rem;">${inst.type||''} ${inst.address?'| '+inst.address.split(',')[0]:''}</div>
+      </div>
+      <div class="card-badge" style="background:${d.accentColor};color:${isColorDark(d.accentColor)?'#fff':'#000'};font-size:${.5*fs}rem;">${badgeText}</div>
+    </div>
+    <div class="card-body" style="background:${d.bodyBg};padding:${sp}px ${sp+2}px;">
+      <div class="photo-frame" style="border-color:${d.accentColor}44;width:${85*fs}px;height:${105*fs}px;">
+        ${s.photo?`<img src="${s.photo}" alt="Photo">`:`<div class="photo-placeholder"><i class="fa-solid fa-user"></i></div>`}
+      </div>
+      <div class="info-grid" style="color:${d.textColor};text-align:${d.textAlign};">
+        <div style="font-size:${.85*fs}rem;font-weight:700;margin-bottom:2px;color:${d.textColor};line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.fullName||'Student Name'}</div>
+        ${s.fatherName?`<div class="info-row"><span class="lbl" style="color:${d.textColor}88;">Father</span><span class="val">${s.fatherName}</span></div>`:''}
+        ${s.rollNumber?`<div class="info-row"><span class="lbl" style="color:${d.textColor}88;">Roll No</span><span class="val">${s.rollNumber}</span></div>`:''}
+        ${s.studentId?`<div class="info-row"><span class="lbl" style="color:${d.textColor}88;">ID</span><span class="val">${s.studentId}</span></div>`:''}
+        ${s.classSemester?`<div class="info-row"><span class="lbl" style="color:${d.textColor}88;">Class</span><span class="val">${s.classSemester}${s.section?' / '+s.section:''}</span></div>`:''}
+        ${s.department?`<div class="info-row"><span class="lbl" style="color:${d.textColor}88;">Dept</span><span class="val">${s.department}</span></div>`:''}
+        ${s.bloodGroup?`<div class="info-row"><span class="lbl" style="color:${d.textColor}88;">Blood</span><span class="val" style="color:${d.accentColor};font-weight:700;">${s.bloodGroup}</span></div>`:''}
+        ${s.dob?`<div class="info-row"><span class="lbl" style="color:${d.textColor}88;">DOB</span><span class="val">${formatDate(s.dob)}</span></div>`:''}
+        ${s.phone?`<div class="info-row"><span class="lbl" style="color:${d.textColor}88;">Phone</span><span class="val">${s.phone}</span></div>`:''}
+      </div>
+    </div>
+    <div class="card-footer" style="background:${d.footerBg};padding:${Math.max(6,sp-4)}px ${sp+2}px;">
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <div class="serial" style="color:${d.accentColor};">${s.serial}</div>
+        <div style="font-size:.45rem;color:rgba(255,255,255,.4);">Valid: ${formatDate(s.issueDate)||'---'} to ${formatDate(s.expiryDate)||'---'}</div>
+      </div>
+      ${d.showBarcode?`<div class="barcode-container"><svg class="barcode-gen"></svg></div>`:''}
+      ${d.showQR?`<div class="qr-container"><div class="qr-gen"></div></div>`:''}
+    </div>
+    ${d.showHologram?'<div class="back-hologram"></div>':''}
+    ${watermarkSrc?`<img src="${watermarkSrc}" style="position:absolute;inset:0;width:100%;height:100%;opacity:.06;pointer-events:none;object-fit:contain;">`:''}
+  </div>`;
+}
+
+function renderBackCard(){
+  const d=getDesignProps();const s=getCurrentStudent();const inst=appState.institution;const fs=d.fontScale/100;
+  const headerBg=d.gradientHeader&&d.headerBg&&!d.headerBg.includes('gradient')
+    ?`linear-gradient(135deg,${d.headerBg},${d.gradientEnd||adjustColor(d.headerBg,30)})`
+    :d.headerBg;
+  const glassClass=d.glassEffect?'glass-effect':'';
+  const bodyOpacity=1-(d.transparency/100);
+  const watermarkSrc=d.watermark||inst.watermark||'';
+
+  return`<div class="id-card ${appState.orientation} ${glassClass}" style="border-radius:${d.borderRadius}px;box-shadow:0 ${d.shadowIntensity/3}px ${d.shadowIntensity}px ${d.shadowColor}66;font-family:${d.fontFamily};font-size:${fs}rem;background:${d.bodyBg};opacity:${bodyOpacity};font-weight:${d.fontWeight};">
+    <div class="card-back">
+      <div class="back-header" style="background:${headerBg};color:#fff;">Important Information</div>
+      <div class="back-body" style="color:${d.textColor};">
+        ${inst.address?`<div class="back-row"><span class="blbl" style="color:${d.textColor}88;">Address</span><span class="bval">${inst.address}</span></div>`:''}
+        ${inst.phone?`<div class="back-row"><span class="blbl" style="color:${d.textColor}88;">Phone</span><span class="bval">${inst.phone}</span></div>`:''}
+        ${inst.email?`<div class="back-row"><span class="blbl" style="color:${d.textColor}88;">Email</span><span class="bval">${inst.email}</span></div>`:''}
+        ${inst.website?`<div class="back-row"><span class="blbl" style="color:${d.textColor}88;">Web</span><span class="bval">${inst.website}</span></div>`:''}
+        ${s.emergencyContact?`<div class="back-row"><span class="blbl" style="color:${d.textColor}88;">Emergency</span><span class="bval">${s.emergencyContact}</span></div>`:''}
+        ${s.address?`<div class="back-row"><span class="blbl" style="color:${d.textColor}88;">Home</span><span class="bval">${s.address}</span></div>`:''}
+        ${s.busRoute?`<div class="back-row"><span class="blbl" style="color:${d.textColor}88;">Bus Route</span><span class="bval">${s.busRoute}</span></div>`:''}
+        ${s.hostel?`<div class="back-row"><span class="blbl" style="color:${d.textColor}88;">Hostel</span><span class="bval">${s.hostel}</span></div>`:''}
+        ${s.rfid?`<div class="back-row"><span class="blbl" style="color:${d.textColor}88;">RFID</span><span class="bval">${s.rfid}</span></div>`:''}
+        <div class="back-row"><span class="blbl" style="color:${d.textColor}88;">Validation</span><span class="bval" style="font-weight:700;letter-spacing:1px;">${s.validation}</span></div>
+      </div>
+      <div class="back-signature">
+        ${inst.signature?`<img class="sig-img" src="${inst.signature}" alt="Signature">`:'<div style="width:80px;"></div>'}
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;">
+          <div class="sig-line"></div>
+          <div class="sig-label" style="color:${d.textColor}66;">${inst.principalName||'Principal / Director'}</div>
+        </div>
+      </div>
+      <div class="back-qr"><div class="qr-large qr-gen-lg" style="background:#fff;border-radius:4px;padding:3px;"></div></div>
+      <div class="back-terms">This card is property of ${inst.name||'the institution'}. If found, please return. Non-transferable. Must be carried at all times.</div>
+    </div>
+    ${d.showHologram?'<div class="back-hologram"></div>':''}
+    ${watermarkSrc?`<img src="${watermarkSrc}" style="position:absolute;inset:0;width:100%;height:100%;opacity:.06;pointer-events:none;object-fit:contain;">`:''}
+  </div>`;
+}
+
+function formatDate(d){if(!d)return'';const dt=new Date(d);return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
+
+function adjustColor(hex,amt){
+  hex=hex.replace('#','');if(hex.length===3)hex=hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+  let r=parseInt(hex.substring(0,2),16),g=parseInt(hex.substring(2,4),16),b=parseInt(hex.substring(4,6),16);
+  r=Math.min(255,Math.max(0,r+amt));g=Math.min(255,Math.max(0,g+amt));b=Math.min(255,Math.max(0,b+amt));
+  return'#'+(r<<16|g<<8|b).toString(16).padStart(6,'0');
+}
+
+function isColorDark(hex){
+  if(!hex||hex.includes('gradient'))return true;
+  hex=hex.replace('#','');
+  if(hex.length!==6)return true;
+  const r=parseInt(hex.substring(0,2),16),g=parseInt(hex.substring(2,4),16),b=parseInt(hex.substring(4,6),16);
+  return(r*299+g*587+b*114)/1000<128;
+}
+
+/* ================================================================
+   CARD SIDE & ZOOM
+================================================================ */
+function showCardSide(side,btn){
+  if(side==='flip'){
+    appState.cardSide=appState.cardSide==='front'?'back':'front';
+  }else{
+    appState.cardSide=side;
+  }
+  if(btn&&btn.parentElement){
+    btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  renderCardToContainers();
+}
+
+function zoomPreview(delta){
+  if(delta===0)appState.previewZoom=1;
+  else appState.previewZoom=Math.max(.5,Math.min(2,appState.previewZoom+delta));
+  document.querySelectorAll('.id-card').forEach(c=>{c.style.transform=`scale(${appState.previewZoom})`;c.style.transformOrigin='center center';});
+}
+
+let isFullscreen=false;
+function toggleFullscreen(){
+  const wrapper=document.getElementById('cardPreviewWrapper');
+  isFullscreen=!isFullscreen;wrapper.classList.toggle('zoomed',isFullscreen);
+  if(!isFullscreen)document.body.style.overflow='';else document.body.style.overflow='hidden';
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&isFullscreen)toggleFullscreen();
+  if(e.ctrlKey&&e.key==='z'){e.preventDefault();undo();}
+  if(e.ctrlKey&&e.key==='y'){e.preventDefault();redo();}
+});
+
+/* ================================================================
+   SCREENSHOT CAPTURE
+================================================================ */
+async function captureScreenshot(){
+  const s=getCurrentStudent();
+  if(!s.fullName&&!s.rollNumber){showToast('Please fill in student details first','error');return;}
+  showLoading('Capturing screenshot...');
+  try{
+    const tempDiv=document.createElement('div');
+    tempDiv.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;';
+    document.body.appendChild(tempDiv);
+    const prevSide=appState.cardSide;
+    appState.cardSide='front';tempDiv.innerHTML=renderFrontCard();afterCardRender(tempDiv);
+    await new Promise(r=>setTimeout(r,500));
+    const canvas=await html2canvas(tempDiv.querySelector('.id-card'),{scale:2,useCORS:true,backgroundColor:null,logging:false});
+    appState.cardSide=prevSide;document.body.removeChild(tempDiv);
+    canvas.toBlob(function(blob){
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');a.href=url;a.download=`screenshot-${s.fullName||'card'}.png`;
+      document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+    },'image/png');
+    hideLoading();showToast('Screenshot saved!','success');
+  }catch(err){hideLoading();showToast('Screenshot failed: '+err.message,'error');}
+}
+
+/* ================================================================
+   GENERATE & DOWNLOAD
+================================================================ */
+function generateCard(){
+  const s=getCurrentStudent();
+  if(!s.fullName&&!s.rollNumber){showToast('Please fill in at least student name and roll number','error');return;}
+  showLoading('Generating your student card...');
+  setTimeout(()=>{
+    renderCardToContainers();
+    setTimeout(()=>{
+      hideLoading();showToast('Card generated successfully! Ready to download.','success');
+      switchTab('preview-tab',document.querySelector('[data-tab=preview-tab]'));
+    },500);
+  },300);
+}
+
+async function downloadCard(format){
+  const s=getCurrentStudent();
+  if(!s.fullName&&!s.rollNumber){showToast('Please fill in student details first','error');return;}
+  showLoading(`Preparing ${format.toUpperCase()} download...`);
+
+  try{
+    const tempDiv=document.createElement('div');
+    tempDiv.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;';
+    document.body.appendChild(tempDiv);
+    const prevSide=appState.cardSide;
+
+    appState.cardSide='front';tempDiv.innerHTML=renderFrontCard();afterCardRender(tempDiv);
+    await new Promise(r=>setTimeout(r,600));
+    const frontCanvas=await html2canvas(tempDiv.querySelector('.id-card'),{scale:3,useCORS:true,allowTaint:true,backgroundColor:null,logging:false});
+
+    appState.cardSide='back';tempDiv.innerHTML=renderBackCard();afterCardRender(tempDiv);
+    await new Promise(r=>setTimeout(r,600));
+    const backCanvas=await html2canvas(tempDiv.querySelector('.id-card'),{scale:3,useCORS:true,allowTaint:true,backgroundColor:null,logging:false});
+
+    appState.cardSide=prevSide;document.body.removeChild(tempDiv);
+    const fileName=(s.fullName||'student').replace(/[^a-zA-Z0-9]/g,'_')+'-id-card';
+
+    if(format==='png'||format==='jpg'){
+      const combined=document.createElement('canvas');
+      const gap=40;
+      combined.width=frontCanvas.width+backCanvas.width+gap*3;
+      combined.height=Math.max(frontCanvas.height,backCanvas.height)+gap*2;
+      const ctx=combined.getContext('2d');
+      ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,combined.width,combined.height);
+      ctx.drawImage(frontCanvas,gap,gap);ctx.drawImage(backCanvas,frontCanvas.width+gap*2,gap);
+      const mimeType=format==='png'?'image/png':'image/jpeg';
+      downloadCanvas(combined,mimeType,`${fileName}.${format==='png'?'png':'jpg'}`);
+    }else if(format==='pdf'){
+      const{jsPDF}=window.jspdf;
+      const w=appState.orientation==='portrait'?54:86;
+      const h=appState.orientation==='portrait'?86:54;
+      const pdf=new jsPDF({orientation:appState.orientation==='portrait'?'p':'l',unit:'mm',format:[w,h]});
+      pdf.addImage(frontCanvas.toDataURL('image/png'),'PNG',0,0,w,h);
+      pdf.addPage([w,h]);pdf.addImage(backCanvas.toDataURL('image/png'),'PNG',0,0,w,h);
+      pdf.save(`${fileName}.pdf`);
+    }
+    hideLoading();showToast(`${format.toUpperCase()} downloaded successfully!`,'success');
+  }catch(err){hideLoading();showToast('Download failed: '+err.message,'error');console.error(err);}
+}
+
+function downloadCanvas(canvas,mimeType,filename){
+  canvas.toBlob(function(blob){
+    const url=URL.createObjectURL(blob);const a=document.createElement('a');
+    a.href=url;a.download=filename;document.body.appendChild(a);a.click();
+    document.body.removeChild(a);URL.revokeObjectURL(url);
+  },mimeType,0.95);
+}
+
+function printCard(){
+  const s=getCurrentStudent();
+  if(!s.fullName&&!s.rollNumber){showToast('Please fill in student details first','error');return;}
+  showLoading('Preparing print...');
+  const tempDiv=document.createElement('div');
+  tempDiv.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;';
+  document.body.appendChild(tempDiv);const prevSide=appState.cardSide;
+  appState.cardSide='front';tempDiv.innerHTML=renderFrontCard();afterCardRender(tempDiv);
+  setTimeout(()=>{
+    html2canvas(tempDiv.querySelector('.id-card'),{scale:2,useCORS:true,backgroundColor:null}).then(canvas=>{
+      appState.cardSide='back';tempDiv.innerHTML=renderBackCard();afterCardRender(tempDiv);
+      setTimeout(()=>{
+        html2canvas(tempDiv.querySelector('.id-card'),{scale:2,useCORS:true,backgroundColor:null}).then(canvas2=>{
+          document.body.removeChild(tempDiv);appState.cardSide=prevSide;
+          const win=window.open('','','width=800,height=600');
+          win.document.write(`<html><head><title>Print Card</title><style>body{display:flex;gap:20px;justify-content:center;align-items:center;min-height:100vh;font-family:sans-serif;}img{max-width:300px;border:1px solid #ccc;border-radius:8px;}@media print{h2{display:none;}}</style></head><body><div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center;"><div><p style="text-align:center;font-weight:bold;">Front</p><img src="${canvas.toDataURL()}"></div><div><p style="text-align:center;font-weight:bold;">Back</p><img src="${canvas2.toDataURL()}"></div></div></body></html>`);
+          win.document.close();setTimeout(()=>{win.print();},500);hideLoading();
+        });
+      },500);
+    });
+  },500);
+}
+
+/* ================================================================
+   DASHBOARD
+================================================================ */
+function initDashboard(){updateStudentCounter();liveUpdate();}
+
+function switchTab(tabId,navItem){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.getElementById(tabId)?.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(navItem)navItem.classList.add('active');
+  document.getElementById('sidebar')?.classList.remove('open');
+  if(tabId==='preview-tab')liveUpdate();
+  if(tabId==='students-tab')renderStudentTable();
+}
+
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');}
+
+/* ================================================================
+   THEME
+================================================================ */
+function toggleTheme(){
+  appState.theme=appState.theme==='dark'?'light':'dark';
+  document.body.classList.toggle('light',appState.theme==='light');
+  const btn=document.getElementById('themeBtn');
+  if(btn)btn.innerHTML=appState.theme==='dark'?'<i class="fa-solid fa-moon"></i>':'<i class="fa-solid fa-sun"></i>';
+  saveToLocalStorage();
+}
+function syncSettingsToggles(){
+  const t=document.getElementById('settings_darkMode');if(t)t.classList.toggle('on',appState.theme==='light');
+}
+
+/* ================================================================
+   LOCAL STORAGE
+================================================================ */
+function saveToLocalStorage(){
+  try{localStorage.setItem('futureStarCardApp',JSON.stringify(appState));}catch(e){console.warn('LocalStorage save failed:',e);}
+}
+
+function loadFromLocalStorage(){
+  try{
+    const data=JSON.parse(localStorage.getItem('futureStarCardApp'));
+    if(data){
+      // Merge carefully to preserve new fields
+      Object.keys(data).forEach(k=>{if(appState.hasOwnProperty(k))appState[k]=data[k];});
+      document.body.classList.toggle('light',appState.theme==='light');
+      const btn=document.getElementById('themeBtn');
+      if(btn)btn.innerHTML=appState.theme==='dark'?'<i class="fa-solid fa-moon"></i>':'<i class="fa-solid fa-sun"></i>';
+      return true;
+    }
+  }catch(e){console.warn('LocalStorage load failed:',e);}
+  return false;
+}
+
+function resetAllData(){
+  if(!confirm('This will delete ALL data including students and settings. Continue?'))return;
+  localStorage.removeItem('futureStarCardApp');location.reload();
+}
+
+/* ================================================================
+   EXPORT / IMPORT
+================================================================ */
+function exportStudents(){
+  const data=JSON.stringify(appState,null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download='students-data.json';a.click();URL.revokeObjectURL(url);
+  showToast('Data exported successfully','success');
+}
+
+function exportCSV(){
+  let csv='Name,FatherName,RollNumber,RegNumber,StudentID,Class,Section,Department,BloodGroup,DOB,Phone,Address,Emergency,IssueDate,ExpiryDate,RFID,BusRoute,Hostel,Serial,Validation\n';
+  appState.students.forEach(s=>{
+    csv+=`"${s.fullName||''}","${s.fatherName||''}","${s.rollNumber||''}","${s.regNumber||''}","${s.studentId||''}","${s.classSemester||''}","${s.section||''}","${s.department||''}","${s.bloodGroup||''}","${s.dob||''}","${s.phone||''}","${s.address||''}","${s.emergencyContact||''}","${s.issueDate||''}","${s.expiryDate||''}","${s.rfid||''}","${s.busRoute||''}","${s.hostel||''}","${s.serial||''}","${s.validation||''}"\n`;
+  });
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download='students-data.csv';a.click();URL.revokeObjectURL(url);
+  showToast('CSV exported successfully','success');
+}
+
+function importStudents(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      if(file.name.endsWith('.csv')){
+        const lines=e.target.result.split('\n').slice(1);
+        let imported=0;
+        lines.forEach(line=>{
+          const cols=line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
+          if(cols&&cols.length>=3){
+            const clean=cols.map(c=>c.replace(/^"|"$/g,'').trim());
+            const s=createEmptyStudent();
+            s.fullName=clean[0]||'';s.fatherName=clean[1]||'';s.rollNumber=clean[2]||'';
+            s.regNumber=clean[3]||'';s.studentId=clean[4]||'';s.classSemester=clean[5]||'';
+            s.section=clean[6]||'';s.department=clean[7]||'';s.bloodGroup=clean[8]||'';
+            s.dob=clean[9]||'';s.phone=clean[10]||'';s.address=clean[11]||'';
+            s.emergencyContact=clean[12]||'';s.issueDate=clean[13]||'';s.expiryDate=clean[14]||'';
+            s.rfid=clean[15]||'';s.busRoute=clean[16]||'';s.hostel=clean[17]||'';
+            appState.students.push(s);imported++;
+          }
+        });
+        showToast(`Imported ${imported} students from CSV`,'success');
+      }else{
+        const data=JSON.parse(e.target.result);
+        if(data.students&&Array.isArray(data.students)){
+          Object.assign(appState,data);saveToLocalStorage();
+          if(appState.students.length>0)loadStudentToForm(Math.min(appState.currentStudentIndex,appState.students.length-1));
+          renderStudentTable();showToast('Data imported successfully!','success');
+        }else{showToast('Invalid data format','error');}
+      }
+    }catch(err){showToast('Import failed: '+err.message,'error');}
+  };
+  reader.readAsText(file);
+  input.value='';
+}
+
+/* ================================================================
+   DRAG & DROP SUPPORT
+================================================================ */
+function setupDragDrop(boxId,inputId){
+  const box=document.getElementById(boxId);
+  if(!box)return;
+  box.addEventListener('dragover',e=>{e.preventDefault();e.stopPropagation();box.style.borderColor='var(--accent)';box.style.background='rgba(212,168,67,.1)';});
+  box.addEventListener('dragleave',e=>{e.preventDefault();e.stopPropagation();box.style.borderColor='';box.style.background='';});
+  box.addEventListener('drop',e=>{
+    e.preventDefault();e.stopPropagation();box.style.borderColor='';box.style.background='';
+    if(e.dataTransfer.files.length>0){
+      const input=document.getElementById(inputId);
+      const dt=new DataTransfer();dt.items.add(e.dataTransfer.files[0]);
+      input.files=dt.files;input.dispatchEvent(new Event('change'));
+    }
+  });
+}
+
+/* ================================================================
+   INIT
+================================================================ */
+function init(){
+  const hasData=loadFromLocalStorage();
+  if(hasData&&appState.institution.name&&appState.students.length>0){
+    goToScreen('dashboard-screen');loadStudentToForm(appState.currentStudentIndex);renderStudentTable();syncSettingsToggles();
+    showToast('Welcome back! Your data has been restored.','info');
+  }else{goToScreen('welcome-screen');}
+  // Set default dates
+  const today=new Date().toISOString().split('T')[0];
+  const nextYear=new Date(Date.now()+365*24*60*60*1000).toISOString().split('T')[0];
+  const issueInput=document.getElementById('stu_issueDate');
+  const expiryInput=document.getElementById('stu_expiryDate');
+  if(issueInput&&!issueInput.value)issueInput.value=today;
+  if(expiryInput&&!expiryInput.value)expiryInput.value=nextYear;
+
+  // Setup drag & drop
+  setupDragDrop('stu_photo_box','stu_photo_input');
+  setupDragDrop('aiUploadBox','ai_image_input');
+}
+
+setInterval(()=>{if(appState.currentScreen==='dashboard-screen')saveToLocalStorage();},30000);
+window.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
